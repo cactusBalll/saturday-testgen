@@ -1,3 +1,8 @@
-.cmake_build/
-build/
+/.cmake_build/
+/build/
 CMakeUserPresets.json
+/.vs/
+/.vscode/
+/.idea/
+/cmake-build-debug/
+

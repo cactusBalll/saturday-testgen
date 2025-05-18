@@ -56,14 +56,24 @@ genericAssociation
     : (typeName | 'default') ':' assignmentExpression
     ;
 
+//postfixExpression
+//    : (primaryExpression | '__extension__'? '(' typeName ')' '{' initializerList ','? '}') (
+//        '[' expression ']'
+//        | '(' argumentExpressionList? ')'
+//        | ('.' | '->') Identifier
+//        | '++'
+//        | '--'
+//    )*
+//    ;
+
 postfixExpression
-    : (primaryExpression | '__extension__'? '(' typeName ')' '{' initializerList ','? '}') (
-        '[' expression ']'
-        | '(' argumentExpressionList? ')'
-        | ('.' | '->') Identifier
-        | '++'
-        | '--'
-    )*
+    : primaryExpression postfixOp*
+    ;
+
+postfixOp
+    : '[' expression ']'
+    | '(' argumentExpressionList? ')'
+    | '.' Identifier
     ;
 
 argumentExpressionList
@@ -94,24 +104,46 @@ castExpression
     | DigitSequence // for
     ;
 
+mulop
+    : '*'
+    | '/'
+    | '%'
+    ;
+
 multiplicativeExpression
-    : castExpression (('*' | '/' | '%') castExpression)*
+    : castExpression (mulop castExpression)*
+    ;
+
+addop
+    : '+'
+    | '-'
     ;
 
 additiveExpression
-    : multiplicativeExpression (('+' | '-') multiplicativeExpression)*
+    : multiplicativeExpression (addop multiplicativeExpression)*
     ;
 
 shiftExpression
     : additiveExpression (('<<' | '>>') additiveExpression)*
     ;
 
+relop
+    : '<'
+    | '>'
+    | '<='
+    | '>='
+    ;
 relationalExpression
-    : shiftExpression (('<' | '>' | '<=' | '>=') shiftExpression)*
+    : shiftExpression (relop shiftExpression)*
+    ;
+
+eqop
+    : '=='
+    | '!='
     ;
 
 equalityExpression
-    : relationalExpression (('==' | '!=') relationalExpression)*
+    : relationalExpression (eqop relationalExpression)*
     ;
 
 andExpression

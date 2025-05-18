@@ -22,9 +22,10 @@ antlr4_generate(
     "c11parser"
 )
 
-add_executable(main src/main.cpp)
+add_executable(main src/main.cpp src/utils.cpp src/parser.cpp)
+target_include_directories(main PRIVATE src)
 
-message(STATUS "ANTLR generated headers: ${ANTLR4_INCLUDE_DIR_C11}, ${ANTLR4_INCLUDE_DIR_C11}")
+message(STATUS "ANTLR generated headers: ${ANTLR4_INCLUDE_DIR_C11}, ${ANTLR4_SRC_FILES_C11}")
 message(STATUS "Z3 headers: " ${Z3_C_INCLUDE_DIRS})
 message(STATUS "Z3 lib: " ${Z3_LIBRARIES})
 
