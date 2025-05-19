@@ -48,6 +48,7 @@ namespace ststgen {
         double miu = 0.0;
         double sigma = 0.0;
         size_t length = 0;
+        std::string struct_name{};
         std::vector<int> dims{};
         std::optional<z3::expr> sym = std::nullopt;
     };
@@ -55,7 +56,10 @@ namespace ststgen {
         void push_member(const std::string &name, SymbolTableEntry &&member) {
             m_members.insert({name, std::move(member)});
         }
-        std::unordered_map<std::string, SymbolTableEntry> m_members{};
+        // ordered to find getters easier
+        std::map<std::string, SymbolTableEntry> m_members{};
+        std::optional<z3::func_decl> sym_constructor = std::nullopt;
+        std::optional<z3::func_decl_vector> sym_getters = std::nullopt;
     };
     class SymbolTable {
     public:
@@ -132,7 +136,7 @@ namespace ststgen {
         std::any visitConditionalExpression(c11parser::CParser::ConditionalExpressionContext *ctx) override;
         std::any visitAssignmentExpression(c11parser::CParser::AssignmentExpressionContext *ctx) override;
         std::any visitExpression(c11parser::CParser::ExpressionContext *ctx) override;
-
+        void solve();
     private:
         SymbolTable m_symbol_table{};
         std::unordered_map<std::string, StructBlueprint> m_struct_blueprints{};
@@ -149,27 +153,39 @@ namespace ststgen {
                 base_type = 0;
             } else if (entry.type == SymbolTableEntryType::Float32 || entry.type == SymbolTableEntryType::Float64) {
                 base_type = 1;
+            } else if (entry.type == SymbolTableEntryType::Struct) {
+                base_type = 2;
             } else {
                 unreachable();
             }
+            z3::sort base_sort{m_solver_context};
+            if (base_type == 0) {
+                base_sort = m_solver_context.int_sort();
+            } else if (base_type == 1) {
+                base_sort = m_solver_context.real_sort();
+            } else {
+                const auto &tup_constructor = m_struct_blueprints.at(entry.struct_name).sym_constructor;
+                auto tup_sort = tup_constructor->range();
+                base_sort = tup_sort;
+            }
             if (entry.qualifer == SymbolTableEntryQualifer::Primary) {
-                if (base_type == 0) {
-                    entry.sym = m_solver_context.int_const(name.c_str());
-                } else {
-                    entry.sym = m_solver_context.real_const(name.c_str());
-                }
+                entry.sym = m_solver_context.constant(name.c_str(), base_sort);
             } else if (entry.qualifer == SymbolTableEntryQualifer::Array) {
-                int size = 1;
-                auto base_sort = base_type ? m_solver_context.real_sort() : m_solver_context.int_sort();
+                int all_l = 1;
+                int outermost_l = 1;
                 for (auto iter = entry.dims.crbegin(); iter != entry.dims.crend(); ++iter) {
-                    size *= *iter;
+                    base_sort = m_solver_context.seq_sort(base_sort);
+                    all_l *= *iter;
+                    outermost_l = *iter;
                 }
-                base_sort = m_solver_context.seq_sort(base_sort);
                 entry.sym = m_solver_context.constant(name.c_str(), base_sort);
                 // array size constraint
-                m_smt_solver.add(entry.sym->length() == size);
+                m_smt_solver.add(entry.sym->length() <= outermost_l);
+
             } else if (entry.qualifer == SymbolTableEntryQualifer::Pointer) {
-                todo();
+                // seq sort without length constraint
+                base_sort = m_solver_context.seq_sort(base_sort);
+                entry.sym = m_solver_context.constant(name.c_str(), base_sort);
             } else {
                 unreachable();
             }
@@ -178,7 +194,7 @@ namespace ststgen {
     };
 
 
-    std::string make_member_name(const std::string &var, const std::string &member, const std::vector<int> &idx) {
+    inline std::string make_member_name(const std::string &var, const std::string &member, const std::vector<int> &idx) {
         auto ret = std::string{var};
         ret += "__m__";
         ret += member;

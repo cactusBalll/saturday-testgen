@@ -62,6 +62,8 @@ namespace ststgen {
         auto decl_list = ctx->declarationSpecifiers();
         bool struct_typedef_ctx{false};
         StructBlueprint blueprint{};
+        std::vector<z3::sort> member_sorts{};
+        std::vector<const char *> member_names{};
 
         for (auto typ: decl_list->declarationSpecifier()) {
             if (auto typ_s = typ->typeSpecifier()) {
@@ -159,8 +161,50 @@ namespace ststgen {
                             }
                         }
                     }
+                    // construct Tuple Sort in z3 with struct declaration
                     base_type = SymbolTableEntryType::Struct;
+
+                    for (const auto &[name, entry]: blueprint.m_members) {
+                        member_names.emplace_back(name.c_str());
+                        // 0 for Int, 1 for Real
+                        int base_type = 0;
+                        if (entry.type == SymbolTableEntryType::Int32 ||
+                            entry.type == SymbolTableEntryType::Int64 ||
+                            entry.type == SymbolTableEntryType::UInt32 ||
+                            entry.type == SymbolTableEntryType::UInt64) {
+                            base_type = 0;
+                        } else if (entry.type == SymbolTableEntryType::Float32 || entry.type == SymbolTableEntryType::Float64) {
+                            base_type = 1;
+                        } else {
+                            unreachable();
+                        }
+                        if (entry.qualifer == SymbolTableEntryQualifer::Primary) {
+                            if (base_type == 0) {
+                                member_sorts.emplace_back(m_solver_context.int_sort());
+                            } else {
+                                member_sorts.emplace_back(m_solver_context.real_sort());
+                            }
+                        } else if (entry.qualifer == SymbolTableEntryQualifer::Array) {
+                            auto base_sort = base_type ? m_solver_context.real_sort() : m_solver_context.int_sort();
+                            base_sort = m_solver_context.seq_sort(base_sort);
+                            member_sorts.emplace_back(base_sort);
+                        } else if (entry.qualifer == SymbolTableEntryQualifer::Pointer) {
+                            // seq sort without length constraint
+                            auto base_sort = base_type ? m_solver_context.real_sort() : m_solver_context.int_sort();
+                            base_sort = m_solver_context.seq_sort(base_sort);
+                            member_sorts.emplace_back(base_sort);
+                        } else {
+                            unreachable();
+                        }
+                    }
+
                     if (p_st->Identifier()) {
+                        auto struct_name = p_st->Identifier()->getText();
+                        z3::func_decl_vector member_getters(m_solver_context);
+                        auto struct_constructor = m_solver_context.tuple_sort(
+                                struct_name.c_str(), member_names.size(), member_names.data(), member_sorts.data(), member_getters);
+                        blueprint.sym_constructor = struct_constructor;
+                        blueprint.sym_getters = member_getters;
                         m_struct_blueprints.insert({p_st->Identifier()->getText(), blueprint});
                     } else {
                         // 结构体的名字在typedef struct{...}后面
@@ -174,6 +218,11 @@ namespace ststgen {
             }
         }
         if (struct_typedef_ctx) {
+            z3::func_decl_vector member_getters(m_solver_context);
+            auto struct_constructor = m_solver_context.tuple_sort(
+                    custom_struct_name.c_str(), member_names.size(), member_names.data(), member_sorts.data(), member_getters);
+            blueprint.sym_constructor = struct_constructor;
+            blueprint.sym_getters = member_getters;
             m_struct_blueprints.insert({custom_struct_name, blueprint});
             return 0;
         }
@@ -207,12 +256,9 @@ namespace ststgen {
                 if (auto p_identifier = p_drct_declarator->Identifier()) {
                     entry.qualifer = SymbolTableEntryQualifer::Primary;
                     if (base_type == SymbolTableEntryType::Struct) {
-                        const auto &blueprint = m_struct_blueprints[custom_struct_name];
-                        std::vector<int> idx{0};
-                        for (const auto &[k, v]: blueprint.m_members) {
-                            const auto syn_name = make_member_name(name, k, idx);
-                            insert_entry(syn_name, v);
-                        }
+                        entry.struct_name = custom_struct_name;
+                        entry.type = SymbolTableEntryType::Struct;
+                        insert_entry(p_identifier->getText(), std::move(entry));
                     } else {
                         insert_entry(p_identifier->getText(), std::move(entry));
                     }
@@ -237,16 +283,9 @@ namespace ststgen {
                     }
                     if (base_type == SymbolTableEntryType::Struct) {
                         const auto &blueprint = m_struct_blueprints[custom_struct_name];
-                        std::vector<int> idx{};
-                        std::vector<std::vector<int>> idxes{};
-                        auto func = [&](const std::vector<int> &idx) {
-                            for (const auto &[k, v]: blueprint.m_members) {
-                                const auto syn_name = make_member_name(name, k, idx);
-                                insert_entry(syn_name, v);
-                            }
-                        };
-                        array_idx_generator(entry.dims, 0, idx, idxes);
-                        std::for_each(idxes.cbegin(), idxes.cend(), func);
+                        entry.type = SymbolTableEntryType::Struct;
+                        entry.struct_name = custom_struct_name;
+                        insert_entry(name, std::move(entry));
                     } else {
                         insert_entry(name, std::move(entry));
                     }
@@ -278,8 +317,6 @@ namespace ststgen {
         for (auto p_post_op: ctx->postfixOp()) {
             if (p_post_op->expression() != nullptr) {
                 // indexing with seq theorem
-                // need modify
-                todo();
                 auto idx = std::any_cast<z3::expr>(visit(p_post_op->expression()));
                 prime_expr = prime_expr.at(idx);
             } else if (p_post_op->argumentExpressionList() != nullptr) {
@@ -311,13 +348,33 @@ namespace ststgen {
                     panic("unknown function constraint name");
                 }
             } else if (p_post_op->Identifier() != nullptr) {
-                todo();
+                auto field = p_post_op->Identifier()->getText();
+                auto sort = prime_expr.get_sort();
+                for (const auto &bp: m_struct_blueprints) {
+                    // 找到对应struct/tuple的类型构造器
+                    if (z3::eq(sort, bp.second.sym_constructor->range())) {
+                        for (const auto &getter: *bp.second.sym_getters) {
+                            if (field == getter.name().str()) {
+                                // 找到对应project函数
+                                prime_expr = getter(prime_expr);
+                                goto field_outter;
+                            }
+                        }
+                    }
+                }
+            field_outter:
+                continue;
             }
         }
         return prime_expr;
     }
     std::any CConstraintVisitor::visitArgumentExpressionList(c11parser::CParser::ArgumentExpressionListContext *ctx) {
-        todo();
+        std::vector<z3::expr> args{};
+        for (auto p_expr: ctx->assignmentExpression()) {
+            auto ret = std::any_cast<z3::expr>(visit(p_expr));
+            args.emplace_back(ret);
+        }
+        return args;
     }
     std::any CConstraintVisitor::visitUnaryExpression(c11parser::CParser::UnaryExpressionContext *ctx) {
         if (!ctx->PlusPlus().empty() || !ctx->MinusMinus().empty() || !ctx->Sizeof().empty()) {
@@ -497,6 +554,10 @@ namespace ststgen {
             return t;
         }
         unreachable();
+    }
+    void CConstraintVisitor::solve() {
+        auto res = m_smt_solver.check();
+        fmt::println("check solver result: {}\n", res == z3::sat);
     }
 
 }// namespace ststgen
