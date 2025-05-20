@@ -28,17 +28,17 @@ namespace ststgen {
 #define info(...) ststgen::_log(__FILE__, __LINE__, __VA_ARGS__)
 #define dbg(var) info(#var ": ", var)
 
-#define panic(hint)                           \
-    do {                                      \
-        info("panic:", hint);                 \
-        throw std::logic_error("user panic"); \
+#define panic(hint)                                         \
+    do {                                                    \
+        ststgen::_log(__FILE__, __LINE__, "panic: ", hint); \
+        throw std::logic_error("user panic");               \
     } while (0)
-#define stst_assert(predicate)                    \
-    do {                                          \
-        if (!(predicate)) {                       \
-            info("assert failed: ", #predicate);  \
-            throw std::logic_error("user assert"); \
-        }                                         \
+#define stst_assert(predicate)                                                \
+    do {                                                                      \
+        if (!(predicate)) {                                                   \
+            ststgen::_log(__FILE__, __LINE__, "assert failed: ", #predicate); \
+            throw std::logic_error("user assert");                            \
+        }                                                                     \
     } while (0)
 #define unimplemented() panic("unimplemented")
 #define unreachable() panic("unreachable")

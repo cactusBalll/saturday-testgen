@@ -9,11 +9,14 @@
 #include "utils.hpp"
 
 #include <any>
+#include <nlohmann/json.hpp>
 #include <optional>
 #include <string_view>
 #include <z3++.h>
 
 namespace ststgen {
+
+    using json = nlohmann::json;
     /// @brief 为展开的struct各成员命名
     std::string make_member_name(const std::string &var, const std::string &member, const std::vector<int> &idx);
 
@@ -73,7 +76,9 @@ namespace ststgen {
             m_table.pop_back();
         }
 
-
+        ScopeTable &get_scope(const int level) {
+            return m_table[level];
+        }
         void add_entry(const std::string &name, const SymbolTableEntry &entry) {
             m_table.back().insert({name, entry});
         }
@@ -137,12 +142,14 @@ namespace ststgen {
         std::any visitAssignmentExpression(c11parser::CParser::AssignmentExpressionContext *ctx) override;
         std::any visitExpression(c11parser::CParser::ExpressionContext *ctx) override;
         void solve();
+
     private:
         SymbolTable m_symbol_table{};
         std::unordered_map<std::string, StructBlueprint> m_struct_blueprints{};
         bool m_process_constraint_statement = false;
         z3::context m_solver_context{};
         z3::solver m_smt_solver{m_solver_context};
+        std::vector<json> m_solves{};
         void insert_entry(const std::string &name, SymbolTableEntry entry) {
             // 0 for Int, 1 for Real
             int base_type = 0;
@@ -191,6 +198,51 @@ namespace ststgen {
             }
             m_symbol_table.add_entry(name, entry);
         }
+        enum class ValueType {
+            Int,
+            Real,
+        };
+        json process_z3_seq(const std::vector<int> &dims, const z3::expr &seq, const z3::model &model, ValueType value_type = ValueType::Int) {
+            return process_z3_seq_rec(dims, seq, model, value_type, 0);
+        }
+
+        json process_z3_seq_rec(const std::vector<int> &dims, const z3::expr &seq, const z3::model &model, ValueType value_type, int depth) {
+            auto ret = json::array();
+            if (depth == dims.size() - 1) {
+                for (int i = 0; i < dims[depth]; ++i) {
+                    auto idx = m_solver_context.int_val(i);
+                    auto v_sym = model.eval(seq.at(idx));
+                    if (value_type == ValueType::Int) {
+                        ret.push_back(v_sym.as_int64());
+                    }
+                    if (value_type == ValueType::Real) {
+                        ret.push_back(v_sym.as_double());
+                    }
+                }
+                return ret;
+            }
+            for (int i = 0; i < dims[depth]; ++i) {
+                auto idx = m_solver_context.int_val(i);
+                auto v_sym = seq.at(idx);
+                auto t_ret = process_z3_seq_rec(dims, v_sym, model, value_type, depth + 1);
+                ret.push_back(t_ret);
+            }
+            return ret;
+        }
+
+        static ValueType entry_type_2_value_type(SymbolTableEntryType type) {
+            if (type == SymbolTableEntryType::Int32 ||
+                type == SymbolTableEntryType::Int64 ||
+                type == SymbolTableEntryType::UInt32 ||
+                type == SymbolTableEntryType::UInt64) {
+                return ValueType::Int;
+            }
+            if (type == SymbolTableEntryType::Float32 ||
+                type == SymbolTableEntryType::Float64) {
+                return ValueType::Real;
+            }
+            panic("not supported");
+        }
     };
 
 
@@ -204,4 +256,6 @@ namespace ststgen {
         }
         return ret;
     }
+
+
 }// namespace ststgen

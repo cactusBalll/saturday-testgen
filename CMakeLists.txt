@@ -8,6 +8,7 @@ find_package(fmt CONFIG REQUIRED)
 find_package(antlr4-runtime CONFIG REQUIRED)
 find_package(antlr4-generator CONFIG REQUIRED)
 find_package(Z3 CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
 # path to ANTLR generator
 set(ANTLR4_JAR_LOCATION ${PROJECT_SOURCE_DIR}/thirdparty/antlr-4.13.2-complete.jar)
 
@@ -38,3 +39,5 @@ target_link_libraries(main PRIVATE fmt::fmt)
 
 target_include_directories(main PRIVATE ${Z3_C_INCLUDE_DIRS})
 target_link_libraries(main PRIVATE ${Z3_LIBRARIES})
+
+target_link_libraries(main PRIVATE nlohmann_json::nlohmann_json)

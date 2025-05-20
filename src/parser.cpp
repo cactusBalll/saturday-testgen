@@ -557,7 +557,81 @@ namespace ststgen {
     }
     void CConstraintVisitor::solve() {
         auto res = m_smt_solver.check();
-        fmt::println("check solver result: {}\n", res == z3::sat);
+        if (res == z3::unsat) {
+            fmt::println("constraint unsat");
+            return;
+        }
+        if (res == z3::unknown) {
+            fmt::println("constraint unknown");
+            return;
+        }
+        fmt::println("constraint sat");
+        auto model = m_smt_solver.get_model();
+        auto solve = json{};
+        for (const auto &[name, entry]: m_symbol_table.get_scope(0)) {
+            if (entry.qualifer == SymbolTableEntryQualifer::Primary) {
+                if (entry.type == SymbolTableEntryType::Int32 ||
+                    entry.type == SymbolTableEntryType::Int64 ||
+                    entry.type == SymbolTableEntryType::UInt32 ||
+                    entry.type == SymbolTableEntryType::UInt64) {
+                    auto subst = model.get_const_interp(entry.sym->decl());
+                    auto v = subst.as_int64();
+                    solve[name] = v;
+                } else if (entry.type == SymbolTableEntryType::Float32 || entry.type == SymbolTableEntryType::Float64) {
+                    auto subst = model.get_const_interp(entry.sym->decl());
+                    auto v = subst.as_double();
+                    solve[name] = v;
+                } else if (entry.type == SymbolTableEntryType::Struct) {
+                    auto subst = model.get_const_interp(entry.sym->decl());
+                    const auto &blueprint = m_struct_blueprints[entry.struct_name];
+                    int idx = 0;
+                    for (const auto &[member_name, member_entry]: blueprint.m_members) {
+                        const auto &getter_sym = (*blueprint.sym_getters)[idx];
+                        auto member_sym = model.eval(getter_sym(subst));
+                        if (member_entry.qualifer == SymbolTableEntryQualifer::Primary) {
+                            if (member_entry.type == SymbolTableEntryType::Int32 ||
+                                member_entry.type == SymbolTableEntryType::Int64 ||
+                                member_entry.type == SymbolTableEntryType::UInt32 ||
+                                member_entry.type == SymbolTableEntryType::UInt64) {
+                                solve[name][member_name] = member_sym.as_int64();
+                            } else if (entry.type == SymbolTableEntryType::Float32 ||
+                                       entry.type == SymbolTableEntryType::Float64) {
+                                solve[name][member_name] = member_sym.as_double();
+                            } else {
+                                unreachable();
+                            }
+                        }
+                        if (entry.qualifer == SymbolTableEntryQualifer::Array) {
+                            auto member_array_json = process_z3_seq(entry.dims, member_sym, model, entry_type_2_value_type(member_entry.type));
+                            solve[name][member_name] = member_array_json;
+                        }
+                        if (entry.qualifer == SymbolTableEntryQualifer::Pointer) {
+                            // pointers are actually handled as 1-D arrays
+                            auto length = model.eval(member_sym.length()).as_int64();
+                            std::vector dims{static_cast<int>(length)};
+                            auto member_array_json = process_z3_seq(dims, member_sym, model, entry_type_2_value_type(member_entry.type));
+                            solve[name][member_name] = member_array_json;
+                        }
+
+                        idx += 1;
+                    }
+                } else {
+                    unreachable();
+                }
+            } else if (entry.qualifer == SymbolTableEntryQualifer::Array) {
+                auto subst = model.get_const_interp(entry.sym->decl());
+                auto array_json = process_z3_seq(entry.dims, subst, model, entry_type_2_value_type(entry.type));
+                solve[name] = array_json;
+            } else if (entry.qualifer == SymbolTableEntryQualifer::Pointer) {
+                auto subst = model.get_const_interp(entry.sym->decl());
+                auto length = model.eval(subst.length()).as_int64();
+                std::vector dims{static_cast<int>(length)};
+                auto array_json = process_z3_seq(dims, subst, model, entry_type_2_value_type(entry.type));
+                solve[name] = array_json;
+            }
+        }
+        fmt::print("got a solve: {}\n", solve.dump(4));
+        m_solves.push_back(solve);
     }
 
 }// namespace ststgen

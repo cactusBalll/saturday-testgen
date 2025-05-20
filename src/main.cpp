@@ -5,6 +5,7 @@
 
 #include <fmt/core.h>
 #include <z3++.h>
+#include <nlohmann/json.hpp>
 
 using namespace z3;
 
@@ -59,8 +60,8 @@ void bitvector_example2() {
 }
 int main(int argc, char** argv) try {
     // demorgan();
-    bitvector_example2();
-    return 0;
+    // bitvector_example2();
+    // return 0;
     cmdline::parser cmd_parser;
     cmd_parser.add<int>(
             "num_cases",
