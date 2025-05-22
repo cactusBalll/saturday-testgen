@@ -33,6 +33,10 @@
 
 grammar C;
 
+compilationUnit
+    : translationUnit? EOF
+    ;
+
 primaryExpression
     : Identifier
     | Constant
@@ -527,9 +531,7 @@ jumpStatement
     ) ';'
     ;
 
-compilationUnit
-    : translationUnit? EOF
-    ;
+
 
 translationUnit
     : externalDeclaration+

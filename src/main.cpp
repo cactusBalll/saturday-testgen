@@ -90,9 +90,10 @@ int main(int argc, char** argv) try {
     int pos_cases = static_cast<int>(num_cases * pos_ratio);
     int neg_cases = num_cases - pos_cases;
     auto cons = cmd_parser.get<std::string>("cons");
-    std::ifstream cons_in(cons);
-    std::stringstream buffer;
+    std::ifstream cons_in{cons};
+    std::stringstream buffer{};
     buffer << cons_in.rdbuf();
+    cons_in.close();
     std::string cons_src{buffer.str()};
 
     // antlr parser
@@ -101,9 +102,12 @@ int main(int argc, char** argv) try {
     antlr4::CommonTokenStream token_stream(&lexer);
     c11parser::CParser parser(&token_stream);
     auto *tree = parser.compilationUnit();
-    auto p_visitor = std::make_unique<ststgen::CConstraintVisitor>();
-    p_visitor->visit(tree);
-    p_visitor->solve();
+    // auto p_visitor = std::make_unique<ststgen::CConstraintVisitor>();
+    // p_visitor->visit(tree);
+    // p_visitor->solve();
+    auto visitor = ststgen::CConstraintVisitor{};
+    visitor.visit(tree);
+    visitor.solve();
     return 0;
 } catch (const std::exception &e) {
     fmt::println("main catch exception: {}", e.what());

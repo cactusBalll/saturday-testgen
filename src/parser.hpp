@@ -55,6 +55,11 @@ namespace ststgen {
         std::vector<int> dims{};
         std::optional<z3::expr> sym = std::nullopt;
     };
+    struct GaussianCons {
+        std::string name{};
+        double miu{0.0};
+        double sigma{0.0};
+    };
     struct StructBlueprint {
         void push_member(const std::string &name, SymbolTableEntry &&member) {
             m_members.insert({name, std::move(member)});
@@ -62,7 +67,7 @@ namespace ststgen {
         // ordered to find getters easier
         std::map<std::string, SymbolTableEntry> m_members{};
         std::optional<z3::func_decl> sym_constructor = std::nullopt;
-        std::optional<z3::func_decl_vector> sym_getters = std::nullopt;
+        std::optional<std::vector<z3::func_decl>> sym_getters = std::nullopt;
     };
     class SymbolTable {
     public:
@@ -115,8 +120,8 @@ namespace ststgen {
     };
     class CConstraintVisitor : public c11parser::CBaseVisitor {
     public:
-        virtual std::any visitFunctionDefinition(c11parser::CParser::FunctionDefinitionContext *ctx) override;
-        virtual std::any visitDeclaration(c11parser::CParser::DeclarationContext *ctx) override;
+        std::any visitFunctionDefinition(c11parser::CParser::FunctionDefinitionContext *ctx) override;
+        std::any visitDeclaration(c11parser::CParser::DeclarationContext *ctx) override;
         // virtual std::any visitCompoundStatement(c11parser::CParser::CompoundStatementContext *ctx) override;
         // virtual std::any visitBlockItemList(c11parser::CParser::BlockItemListContext *ctx) override;
         // virtual std::any visitBlockItem(c11parser::CParser::BlockItemContext *ctx) override;
@@ -144,8 +149,10 @@ namespace ststgen {
         void solve();
 
     private:
+        const std::vector<std::string> m_primitive{"_LENGTH", "GAUSSIAN"};
         SymbolTable m_symbol_table{};
         std::unordered_map<std::string, StructBlueprint> m_struct_blueprints{};
+        std::vector<GaussianCons> m_gaussian_cons{};
         bool m_process_constraint_statement = false;
         z3::context m_solver_context{};
         z3::solver m_smt_solver{m_solver_context};
@@ -201,12 +208,13 @@ namespace ststgen {
         enum class ValueType {
             Int,
             Real,
+            Struct,
         };
-        json process_z3_seq(const std::vector<int> &dims, const z3::expr &seq, const z3::model &model, ValueType value_type = ValueType::Int) {
-            return process_z3_seq_rec(dims, seq, model, value_type, 0);
+        json process_z3_seq(const std::vector<int> &dims, const z3::expr &seq, const z3::model &model, const SymbolTableEntry &entry, ValueType value_type = ValueType::Int) {
+            return process_z3_seq_rec(dims, seq, model, entry, value_type, 0);
         }
 
-        json process_z3_seq_rec(const std::vector<int> &dims, const z3::expr &seq, const z3::model &model, ValueType value_type, int depth) {
+        json process_z3_seq_rec(const std::vector<int> &dims, const z3::expr &seq, const z3::model &model, const SymbolTableEntry &entry, ValueType value_type, int depth) {
             auto ret = json::array();
             if (depth == dims.size() - 1) {
                 for (int i = 0; i < dims[depth]; ++i) {
@@ -218,14 +226,54 @@ namespace ststgen {
                     if (value_type == ValueType::Real) {
                         ret.push_back(v_sym.as_double());
                     }
+                    if (value_type == ValueType::Struct) {
+                        ret.push_back(process_z3_tuple(entry, model, v_sym));
+                    }
                 }
                 return ret;
             }
             for (int i = 0; i < dims[depth]; ++i) {
                 auto idx = m_solver_context.int_val(i);
                 auto v_sym = seq.at(idx);
-                auto t_ret = process_z3_seq_rec(dims, v_sym, model, value_type, depth + 1);
+                auto t_ret = process_z3_seq_rec(dims, v_sym, model, entry, value_type, depth + 1);
                 ret.push_back(t_ret);
+            }
+            return ret;
+        }
+
+        json process_z3_tuple(const SymbolTableEntry &entry, const z3::model &model, const z3::expr &subst) {
+            auto ret = json::object();
+            const auto &blueprint = m_struct_blueprints[entry.struct_name];
+            int idx = 0;
+            for (const auto &[member_name, member_entry]: blueprint.m_members) {
+                auto getter_sym = (*blueprint.sym_getters)[idx];
+                auto member_sym = model.eval(getter_sym(subst));
+                if (member_entry.qualifer == SymbolTableEntryQualifer::Primary) {
+                    if (member_entry.type == SymbolTableEntryType::Int32 ||
+                        member_entry.type == SymbolTableEntryType::Int64 ||
+                        member_entry.type == SymbolTableEntryType::UInt32 ||
+                        member_entry.type == SymbolTableEntryType::UInt64) {
+                        ret[member_name] = member_sym.as_int64();
+                    } else if (member_entry.type == SymbolTableEntryType::Float32 ||
+                               member_entry.type == SymbolTableEntryType::Float64) {
+                        ret[member_name] = member_sym.as_double();
+                    } else {
+                        unreachable();
+                    }
+                }
+                if (member_entry.qualifer == SymbolTableEntryQualifer::Array) {
+                    auto member_array_json = process_z3_seq(entry.dims, member_sym, model, entry, entry_type_2_value_type(member_entry.type));
+                    ret[member_name] = member_array_json;
+                }
+                if (member_entry.qualifer == SymbolTableEntryQualifer::Pointer) {
+                    // pointers are actually handled as 1-D arrays
+                    auto length = model.eval(member_sym.length()).as_int64();
+                    std::vector dims{static_cast<int>(length)};
+                    auto member_array_json = process_z3_seq(dims, member_sym, model, entry, entry_type_2_value_type(member_entry.type));
+                    ret[member_name] = member_array_json;
+                }
+
+                idx += 1;
             }
             return ret;
         }
@@ -240,6 +288,9 @@ namespace ststgen {
             if (type == SymbolTableEntryType::Float32 ||
                 type == SymbolTableEntryType::Float64) {
                 return ValueType::Real;
+            }
+            if (type == SymbolTableEntryType::Struct) {
+                return ValueType::Struct;
             }
             panic("not supported");
         }

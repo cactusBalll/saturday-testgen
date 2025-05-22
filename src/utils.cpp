@@ -1,6 +1,6 @@
 #include "utils.hpp"
 
 namespace ststgen{
-int g_log_level = 0;
+int g_log_level = 1;
 
 }

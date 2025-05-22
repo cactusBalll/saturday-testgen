@@ -17,7 +17,8 @@ namespace ststgen {
     template<typename T1, typename... T2>
     void _log(const char *file, int line, const T1 &x, const T2 &...xs) {
         if (g_log_level > 0) {
-            fmt::print(stderr, "{}:{}", file, line);
+            fmt::print(stderr, "{}:{} ", file, line);
+            fmt::print(stderr, "{} ", x);
             if constexpr (sizeof...(xs) > 0) {
                 _log1(xs...);
             }
