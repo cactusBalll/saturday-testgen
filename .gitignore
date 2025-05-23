@@ -5,4 +5,5 @@ CMakeUserPresets.json
 /.vscode/
 /.idea/
 /cmake-build-debug/
+.z3-trace
 

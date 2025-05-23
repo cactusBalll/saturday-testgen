@@ -27,7 +27,7 @@ namespace ststgen {
     }
 
 #define info(...) ststgen::_log(__FILE__, __LINE__, __VA_ARGS__)
-#define dbg(var) info(#var ": ", var)
+#define dbg(var) ststgen::_log(__FILE__, __LINE__, #var ": ", var)
 
 #define panic(hint)                                         \
     do {                                                    \

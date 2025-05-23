@@ -7,6 +7,10 @@
 #include <z3++.h>
 #include <nlohmann/json.hpp>
 
+// windows平台下CRT内存分析
+// #define _CRTDBG_MAP_ALLOC
+// #include <stdlib.h>
+// #include <crtdbg.h>
 using namespace z3;
 
 void demorgan() {
@@ -108,6 +112,10 @@ int main(int argc, char** argv) try {
     auto visitor = ststgen::CConstraintVisitor{};
     visitor.visit(tree);
     visitor.solve();
+
+    // windows平台下CRT内存分析
+    // _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
+    // _CrtDumpMemoryLeaks();
     return 0;
 } catch (const std::exception &e) {
     fmt::println("main catch exception: {}", e.what());

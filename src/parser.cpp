@@ -225,13 +225,7 @@ namespace ststgen {
                                 struct_name.c_str(), member_names.size(), member_names.data(), member_sorts.data(), member_getters);
                         blueprint.sym_constructor = struct_constructor;
                         info("member getter: ",member_getters.to_string());
-                        Z3_ast_vector_inc_ref(m_solver_context, member_getters);
-                        std::vector<z3::func_decl> member_getters_vec;
-                        member_getters_vec.reserve(member_getters.size());
-                        for (auto f : member_getters) {
-                            member_getters_vec.push_back(f);
-                        }
-                        blueprint.sym_getters = member_getters_vec;
+                        blueprint.sym_getters = member_getters;
                         m_struct_blueprints.insert({p_st->Identifier()->getText(), blueprint});
                     } else {
                         // 结构体的名字在typedef struct{...}后面
@@ -266,18 +260,10 @@ namespace ststgen {
             z3::func_decl_vector member_getters(m_solver_context);
             auto struct_constructor = m_solver_context.tuple_sort(
                     custom_struct_name.c_str(), member_names.size(), member_names.data(), member_sorts.data(), member_getters);
+
             blueprint.sym_constructor = struct_constructor;
-            // it seems that z3 doesn't support optional, its refcount breaks here
-            // increase refcount manually
-            Z3_ast_vector_inc_ref(m_solver_context, member_getters);
-            // it doesn't work
-            // use std containers
-            std::vector<z3::func_decl> member_getters_vec;
-            member_getters_vec.reserve(member_getters.size());
-            for (auto f : member_getters) {
-                member_getters_vec.push_back(f);
-            }
-            blueprint.sym_getters = member_getters_vec;
+            blueprint.sym_getters = member_getters;
+
             info("member getter: ",member_getters.to_string());
             m_struct_blueprints.insert({custom_struct_name, blueprint});
             return 0;
@@ -426,7 +412,9 @@ namespace ststgen {
                     // stst_assert(args[0].is_const());
                     stst_assert(args[1].is_numeral());
                     stst_assert(args[2].is_numeral());
-                    auto name = args[0].to_string();
+                    // auto name = args[0].to_string();
+                    // C语法的字段访问似乎和json相似
+                    auto name = p_post_op->argumentExpressionList()->assignmentExpression(0)->getText();
                     auto miu = args[1].as_double();
                     auto sigma = args[2].as_double();
                     // auto vari = m_symbol_table.lookup_entry(name);
@@ -704,7 +692,11 @@ namespace ststgen {
                 solve[name] = array_json;
             }
         }
+        info("got a solve");
         fmt::print("got a solve: {}\n", solve.dump(4));
+        for (const auto &[name, miu, sigma]: m_gaussian_cons) {
+            fmt::println("gaussian constraint {}:(miu: {}, sigma: {})", name, miu, sigma);
+        }
         m_solves.push_back(solve);
     }
 

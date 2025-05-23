@@ -67,7 +67,7 @@ namespace ststgen {
         // ordered to find getters easier
         std::map<std::string, SymbolTableEntry> m_members{};
         std::optional<z3::func_decl> sym_constructor = std::nullopt;
-        std::optional<std::vector<z3::func_decl>> sym_getters = std::nullopt;
+        std::optional<z3::func_decl_vector> sym_getters = std::nullopt;
     };
     class SymbolTable {
     public:
@@ -149,13 +149,14 @@ namespace ststgen {
         void solve();
 
     private:
+        // 析构顺序相关，因为是反方向依次析构，所以必须保证求解器和求解器上下文在最前面
+        z3::context m_solver_context{};
+        z3::solver m_smt_solver{m_solver_context};
         const std::vector<std::string> m_primitive{"_LENGTH", "GAUSSIAN"};
         SymbolTable m_symbol_table{};
         std::unordered_map<std::string, StructBlueprint> m_struct_blueprints{};
         std::vector<GaussianCons> m_gaussian_cons{};
         bool m_process_constraint_statement = false;
-        z3::context m_solver_context{};
-        z3::solver m_smt_solver{m_solver_context};
         std::vector<json> m_solves{};
         void insert_entry(const std::string &name, SymbolTableEntry entry) {
             // 0 for Int, 1 for Real
@@ -219,7 +220,7 @@ namespace ststgen {
             if (depth == dims.size() - 1) {
                 for (int i = 0; i < dims[depth]; ++i) {
                     auto idx = m_solver_context.int_val(i);
-                    auto v_sym = model.eval(seq.at(idx));
+                    auto v_sym = model.eval(seq.nth(idx));
                     if (value_type == ValueType::Int) {
                         ret.push_back(v_sym.as_int64());
                     }
@@ -234,7 +235,7 @@ namespace ststgen {
             }
             for (int i = 0; i < dims[depth]; ++i) {
                 auto idx = m_solver_context.int_val(i);
-                auto v_sym = seq.at(idx);
+                auto v_sym = seq.nth(idx);
                 auto t_ret = process_z3_seq_rec(dims, v_sym, model, entry, value_type, depth + 1);
                 ret.push_back(t_ret);
             }
@@ -245,9 +246,11 @@ namespace ststgen {
             auto ret = json::object();
             const auto &blueprint = m_struct_blueprints[entry.struct_name];
             int idx = 0;
+            dbg(blueprint.sym_getters->size());
             for (const auto &[member_name, member_entry]: blueprint.m_members) {
                 auto getter_sym = (*blueprint.sym_getters)[idx];
-                auto member_sym = model.eval(getter_sym(subst));
+                auto t = getter_sym(subst);
+                auto member_sym = model.eval(t);
                 if (member_entry.qualifer == SymbolTableEntryQualifer::Primary) {
                     if (member_entry.type == SymbolTableEntryType::Int32 ||
                         member_entry.type == SymbolTableEntryType::Int64 ||
