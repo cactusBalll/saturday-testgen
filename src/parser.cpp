@@ -393,7 +393,8 @@ namespace ststgen {
                 auto idx = std::any_cast<z3::expr>(visit(p_post_op->expression()));
                 info("idx: ", idx.to_string());
                 info("seq: ", prime_expr.to_string());
-                prime_expr = prime_expr.nth(idx);
+                // prime_expr = prime_expr.nth(idx);
+                prime_expr = prime_expr[idx];
             } else if (p_post_op->argumentExpressionList() != nullptr) {
                 // function form constraints
                 if (!prime_expr.is_string_value()) {
@@ -646,6 +647,7 @@ namespace ststgen {
     }
     void CConstraintVisitor::solve() {
         info("checking sat: ", m_smt_solver.to_smt2());
+
         auto res = m_smt_solver.check();
         if (res == z3::unsat) {
             fmt::println("constraint unsat");
@@ -653,6 +655,7 @@ namespace ststgen {
         }
         if (res == z3::unknown) {
             fmt::println("constraint unknown");
+            fmt::println("reason: {}", m_smt_solver.reason_unknown());
             return;
         }
         fmt::println("constraint sat");

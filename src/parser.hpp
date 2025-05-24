@@ -158,6 +158,25 @@ namespace ststgen {
         std::vector<GaussianCons> m_gaussian_cons{};
         bool m_process_constraint_statement = false;
         std::vector<json> m_solves{};
+        /// @deprecated
+        void set_length_constraint(const z3::expr& seq, const std::vector<int> &dims) {
+            auto t = std::vector(dims);
+            set_length_constraint_rec(seq, t);
+        }
+        void set_length_constraint_rec(const z3::expr& seq, std::vector<int> &dims) {
+            if (dims.empty()) {
+                return;
+            }
+            m_smt_solver.add(seq.length() == dims.at(0));
+            int dim = dims.at(0);
+            dims.erase(dims.cbegin());
+            for (int i = 0; i < dim; i++) {
+                auto idx = m_solver_context.int_val(i);
+                auto sub_seq = seq.nth(idx);
+                set_length_constraint_rec(sub_seq, dims);
+            }
+            dims.insert(dims.cbegin(), dim);
+        }
         void insert_entry(const std::string &name, SymbolTableEntry entry) {
             // 0 for Int, 1 for Real
             int base_type = 0;
@@ -189,13 +208,15 @@ namespace ststgen {
                 int all_l = 1;
                 int outermost_l = 1;
                 for (auto iter = entry.dims.crbegin(); iter != entry.dims.crend(); ++iter) {
-                    base_sort = m_solver_context.seq_sort(base_sort);
+                    // base_sort = m_solver_context.seq_sort(base_sort);
+                    base_sort = m_solver_context.array_sort(m_solver_context.int_sort(), base_sort);
                     all_l *= *iter;
                     outermost_l = *iter;
                 }
                 entry.sym = m_solver_context.constant(name.c_str(), base_sort);
                 // array size constraint
-                m_smt_solver.add(entry.sym->length() <= outermost_l);
+                // m_smt_solver.add(entry.sym->length() == outermost_l);
+                // set_length_constraint(*entry.sym, entry.dims);
 
             } else if (entry.qualifer == SymbolTableEntryQualifer::Pointer) {
                 // seq sort without length constraint
@@ -220,7 +241,7 @@ namespace ststgen {
             if (depth == dims.size() - 1) {
                 for (int i = 0; i < dims[depth]; ++i) {
                     auto idx = m_solver_context.int_val(i);
-                    auto v_sym = model.eval(seq.nth(idx));
+                    auto v_sym = model.eval(seq[idx]);
                     if (value_type == ValueType::Int) {
                         ret.push_back(v_sym.as_int64());
                     }
@@ -235,7 +256,7 @@ namespace ststgen {
             }
             for (int i = 0; i < dims[depth]; ++i) {
                 auto idx = m_solver_context.int_val(i);
-                auto v_sym = seq.nth(idx);
+                auto v_sym = seq[idx];
                 auto t_ret = process_z3_seq_rec(dims, v_sym, model, entry, value_type, depth + 1);
                 ret.push_back(t_ret);
             }
