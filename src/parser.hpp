@@ -4,6 +4,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <random>
 
 #include "CBaseVisitor.h"
 #include "utils.hpp"
@@ -120,6 +121,9 @@ namespace ststgen {
     };
     class CConstraintVisitor : public c11parser::CBaseVisitor {
     public:
+        CConstraintVisitor(int case_number, bool is_positive): total_gen_cases(case_number),constraint_val_list(m_solver_context),all_expr_vector(m_solver_context) {
+            positive = is_positive ? 'P' : 'N';
+        }
         std::any visitFunctionDefinition(c11parser::CParser::FunctionDefinitionContext *ctx) override;
         std::any visitDeclaration(c11parser::CParser::DeclarationContext *ctx) override;
         // virtual std::any visitCompoundStatement(c11parser::CParser::CompoundStatementContext *ctx) override;
@@ -146,7 +150,14 @@ namespace ststgen {
         std::any visitConditionalExpression(c11parser::CParser::ConditionalExpressionContext *ctx) override;
         std::any visitAssignmentExpression(c11parser::CParser::AssignmentExpressionContext *ctx) override;
         std::any visitExpression(c11parser::CParser::ExpressionContext *ctx) override;
-        void solve();
+        bool solve();
+        void update_constraint_val_map(z3::expr& clause, unsigned expr_id);
+        void mutateVar(z3::expr_vector::iterator var);
+        void setRandomSeed(unsigned s) {
+            random_g = std::mt19937_64(s);
+        }
+        void mutateEntrance(std::string &outpath);
+        z3::expr replaceKnownVar(z3::expr inp, int &unknown_count);
 
     private:
         // 析构顺序相关，因为是反方向依次析构，所以必须保证求解器和求解器上下文在最前面
@@ -157,7 +168,15 @@ namespace ststgen {
         std::unordered_map<std::string, StructBlueprint> m_struct_blueprints{};
         std::vector<GaussianCons> m_gaussian_cons{};
         bool m_process_constraint_statement = false;
-        std::vector<json> m_solves{};
+        std::mt19937_64 random_g;
+        unsigned total_gen_cases, cur_case;
+        char positive;
+        std::filesystem::path output_path;
+        z3::expr_vector constraint_val_list, all_expr_vector;
+        std::map<unsigned, int> or_expr_idmap;
+        std::map<std::string, std::vector<unsigned>> constraint_val_expr_idmap;
+        std::map<std::string, int> constraint_val_cur_value;
+
         /// @deprecated
         void set_length_constraint(const z3::expr& seq, const std::vector<int> &dims) {
             auto t = std::vector(dims);

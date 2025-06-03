@@ -1,5 +1,5 @@
 int _LENGTH(void* ptr);
-void GAUSSIAN(double mu, double sigma, double VAR);
+void GAUSSIAN(double VAR, double mu, double sigma);
 
 typedef struct {
     int a;

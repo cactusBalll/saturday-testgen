@@ -6,4 +6,5 @@ CMakeUserPresets.json
 /.idea/
 /cmake-build-debug/
 .z3-trace
-
+.DS_store
+.cache

@@ -11,6 +11,8 @@ find_package(Z3 CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 # path to ANTLR generator
 set(ANTLR4_JAR_LOCATION ${PROJECT_SOURCE_DIR}/thirdparty/antlr-4.13.2-complete.jar)
+add_compile_options(-g)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 message(STATUS "ANTLR4 includes: ${ANTLR4_INCLUDE_DIR} ")
 

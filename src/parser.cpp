@@ -2,7 +2,6 @@
 #include "utils.hpp"
 #include "z3++.h"
 
-#include <optional>
 
 namespace ststgen {
 
@@ -539,22 +538,32 @@ namespace ststgen {
 
         auto clause0 = std::any_cast<z3::expr>(visit(ctx->shiftExpression()[0]));
         auto clause1 = std::any_cast<z3::expr>(visit(ctx->shiftExpression()[1]));
-        info(clause0.to_string());
-        info(clause1.to_string());
+        // info(clause0.to_string());
+        // info(clause1.to_string());
+
+        std::any res;
+        
         if (ctx->relop(0)->getText() == "<") {
-            return clause0 < clause1;
+            res = clause0 < clause1;
+        } else if (ctx->relop(0)->getText() == "<=") {
+            res = clause0 <= clause1;
+        } else if (ctx->relop(0)->getText() == ">=") {
+            res = clause0 >= clause1;
+        } else if (ctx->relop(0)->getText() == ">") {
+            res = clause0 > clause1;
+        } else {
+            unreachable();
         }
-        if (ctx->relop(0)->getText() == "<=") {
-            return clause0 <= clause1;
-        }
-        if (ctx->relop(0)->getText() == ">=") {
-            return clause0 >= clause1;
-        }
-        if (ctx->relop(0)->getText() == ">") {
-            return clause0 > clause1;
-        }
-        unreachable();
+
+        all_expr_vector.push_back(std::any_cast<z3::expr>(res));
+        unsigned id = all_expr_vector.size() - 1;
+
+        update_constraint_val_map(clause0, id);
+        update_constraint_val_map(clause1, id);
+
+        return res;
     }
+
     std::any CConstraintVisitor::visitEqualityExpression(c11parser::CParser::EqualityExpressionContext *ctx) {
         if (ctx->relationalExpression().size() > 2) {
             panic("chain == != not work as expected most of time thus not allowed");
@@ -564,13 +573,20 @@ namespace ststgen {
         }
         auto clause0 = std::any_cast<z3::expr>(visit(ctx->relationalExpression()[0]));
         auto clause1 = std::any_cast<z3::expr>(visit(ctx->relationalExpression()[1]));
+
+        std::any res;
         if (ctx->eqop(0)->getText() == "!=") {
-            return clause0 != clause1;
+            res = clause0 != clause1;
+        } else if (ctx->eqop(0)->getText() == "==") {
+            res = clause0 == clause1;
+        } else {
+            unreachable();
         }
-        if (ctx->eqop(0)->getText() == "==") {
-            return clause0 == clause1;
-        }
-        unreachable();
+        all_expr_vector.push_back(std::any_cast<z3::expr>(res));
+        unsigned id = all_expr_vector.size() - 1;
+        update_constraint_val_map(clause0, id);
+        update_constraint_val_map(clause1, id);
+        return res;
     }
     std::any CConstraintVisitor::visitAndExpression(c11parser::CParser::AndExpressionContext *ctx) {
         auto p_sub = ctx->equalityExpression();
@@ -600,7 +616,7 @@ namespace ststgen {
         z3::expr expr = m_solver_context.bool_val(true);
         for (auto p_clause: ctx->inclusiveOrExpression()) {
             auto clause = std::any_cast<z3::expr>(visit(p_clause));
-            info("&& clause", clause.to_string());
+            // info("&& clause", clause.to_string());
             expr = expr && clause;
         }
         return expr;
@@ -610,10 +626,18 @@ namespace ststgen {
             return visit(ctx->logicalAndExpression(0));
         }
         z3::expr expr = m_solver_context.bool_val(false);
+        static int or_class_id = 0; // 标识在一个或表达式中的所有子句
         for (auto p_clause: ctx->logicalAndExpression()) {
             auto clause = std::any_cast<z3::expr>(visit(p_clause));
+            if (clause.is_bool()) {
+                unsigned expr_id = all_expr_vector.size() - 1;
+                assert(all_expr_vector[expr_id].to_string() == clause.to_string()); // Debug
+                info("add clause into or_expr_idmap: ", or_class_id, expr_id, clause.to_string());
+                or_expr_idmap.emplace(expr_id, or_class_id);
+            }
             expr = expr || clause;
         }
+        or_class_id += 2;
         return expr;
     }
     std::any CConstraintVisitor::visitConditionalExpression(c11parser::CParser::ConditionalExpressionContext *ctx) {
@@ -645,18 +669,40 @@ namespace ststgen {
         }
         unreachable();
     }
-    void CConstraintVisitor::solve() {
+
+    void CConstraintVisitor::update_constraint_val_map(z3::expr& clause, unsigned expr_id) {
+        if (clause.is_numeral()) {
+            return;
+        }
+        // fmt::println("update_constraint_val_map: clause {}, func kind {}", clause.to_string(), (int)clause.decl().decl_kind());
+        auto clause_op = clause.decl().decl_kind();
+        if (clause.is_arith() && clause.num_args() > 1 && clause_op != Z3_OP_SELECT && clause_op != Z3_OP_SEQ_NTH) {
+            for(auto child : clause.args()) {
+                update_constraint_val_map(child, expr_id);
+            }
+            return;
+        }
+        auto val_name = clause.to_string();
+        if (constraint_val_expr_idmap.count(val_name) == 0) {
+            info("found new val: ", val_name);
+            constraint_val_list.push_back(clause);
+            constraint_val_expr_idmap.emplace(val_name, std::vector<unsigned>());
+        }
+        constraint_val_expr_idmap.at(val_name).push_back(expr_id);
+    }
+
+    bool CConstraintVisitor::solve() {
         info("checking sat: ", m_smt_solver.to_smt2());
 
         auto res = m_smt_solver.check();
         if (res == z3::unsat) {
             fmt::println("constraint unsat");
-            return;
+            return false;
         }
         if (res == z3::unknown) {
             fmt::println("constraint unknown");
             fmt::println("reason: {}", m_smt_solver.reason_unknown());
-            return;
+            return false;
         }
         fmt::println("constraint sat");
         auto model = m_smt_solver.get_model();
@@ -695,12 +741,175 @@ namespace ststgen {
                 solve[name] = array_json;
             }
         }
-        info("got a solve");
-        fmt::print("got a solve: {}\n", solve.dump(4));
-        for (const auto &[name, miu, sigma]: m_gaussian_cons) {
-            fmt::println("gaussian constraint {}:(miu: {}, sigma: {})", name, miu, sigma);
+        // fmt::print("got a solve: {}\n", solve.dump(4));
+        // for (const auto &[name, miu, sigma]: m_gaussian_cons) {
+        //     fmt::println("gaussian constraint {}:(miu: {}, sigma: {})", name, miu, sigma);
+        // }
+        std::filesystem::path outfile = output_path / fmt::format("{}{:05d}.json", positive, cur_case);
+        std::ofstream ofs(outfile);
+        if (ofs.is_open()) {
+            ofs << std::setw(4) << solve;
+            ofs.close();
+        } else {
+            info("Error: can not open {} for output!", outfile.c_str());
+            std::cout << std::setw(4) << solve;
         }
-        m_solves.push_back(solve);
+        cur_case++;
+        return true;
     }
 
+    void CConstraintVisitor::mutateEntrance(std::string &outpath) {
+        cur_case = 0;
+        output_path = outpath;
+        info("after parse: ", m_smt_solver.to_smt2());
+        if (m_smt_solver.check() != z3::sat) {
+            info("The original constraint can not solve!");
+            return;
+        }
+        
+        for(int mutate_cycle = 1; cur_case < total_gen_cases ; mutate_cycle++) {
+            int this_cycle_begin_cases = cur_case;
+            assert(constraint_val_cur_value.empty());
+            if (or_expr_idmap.empty()) {
+                mutateVar(constraint_val_list.begin());
+            } else { // 从若干或语句中任意激活一条
+                m_smt_solver.push();
+                int last_or_class = 0;
+                std::vector<std::map<unsigned, int>::iterator> cur_or_exprs;
+                or_expr_idmap.emplace(all_expr_vector.size(), -2);
+                for(auto it = or_expr_idmap.begin(); it != or_expr_idmap.end(); it++) {
+                    int cur_class = it->second >> 1;
+                    if (it->second & 1) {
+                        it->second--;
+                    }
+                    if (cur_class == last_or_class) {
+                        cur_or_exprs.push_back(it);
+                        continue;
+                    }
+                    std::uniform_int_distribution<size_t> rf{0, cur_or_exprs.size() - 1};
+                    size_t choose = rf(random_g);
+                    auto choosed_it = cur_or_exprs[choose];
+                    choosed_it->second++;
+                    info("Add or expr into solver: ",all_expr_vector[choosed_it->first].to_string());
+                    m_smt_solver.add(all_expr_vector[choosed_it->first]);
+                    last_or_class = cur_class;
+                    cur_or_exprs.clear();
+                    cur_or_exprs.push_back(it);
+                }
+                if (m_smt_solver.check() == z3::sat) {                
+                    mutateVar(constraint_val_list.begin());
+                }
+                m_smt_solver.pop();
+            }
+            fmt::println("In mutate cycle {}, generated {} cases.", mutate_cycle, cur_case-this_cycle_begin_cases);
+        }
+    }
+
+    z3::expr CConstraintVisitor::replaceKnownVar(z3::expr inp, int &unknown_count) {
+        auto str = inp.to_string();
+        if (inp.is_numeral()) {
+            return inp;
+        }
+        if (constraint_val_expr_idmap.count(str)) {
+            // 属于原子变量，终止递归
+            if (constraint_val_cur_value.count(str)) {
+                return m_solver_context.int_val(constraint_val_cur_value[str]);
+            } else {
+                unknown_count++;
+                return inp;
+            }
+        }
+        auto inp_args = inp.args();
+        for(unsigned i = 0; i < inp_args.size(); i++) {
+            z3::expr new_expr = replaceKnownVar(inp_args[i], unknown_count);
+            inp_args.set(i, new_expr);
+        }
+        return inp.decl()(inp_args);
+    }
+
+    void CConstraintVisitor::mutateVar(z3::expr_vector::iterator var_i) {
+        if(var_i == constraint_val_list.end()) { 
+            solve();
+            return;
+        }
+        auto val_name = (*var_i).to_string();
+        info("Now mutate variable:", val_name);
+        auto next_var_i = var_i;
+        next_var_i++;
+
+        // 更新变量可取范围
+        int64_t val_min = INT_MIN, val_max = INT_MAX;
+        for(auto expr_id : constraint_val_expr_idmap[val_name]) {
+            auto or_map_find_it = or_expr_idmap.find(expr_id);
+            if (or_map_find_it != or_expr_idmap.end() && (or_map_find_it->second & 1) == 0) {
+                continue;
+            }
+            int unknown_count = 0;
+            auto expr = replaceKnownVar(all_expr_vector[expr_id], unknown_count).simplify();
+            if (unknown_count > 1) {
+                continue;
+            }
+            bool is_not_set = false;
+            if (expr.decl().decl_kind() == Z3_OP_NOT) {
+                is_not_set = true;
+                expr = expr.arg(0);
+            }
+
+            assert(expr.num_args() == 2);
+            auto clause0 = expr.arg(0);
+            auto clause1 = expr.arg(1);
+
+            assert(clause0.to_string() == val_name || clause1.to_string() == val_name);
+            if (clause0.to_string() != val_name && clause1.to_string() == val_name) {
+                clause1 = clause0;
+                auto op = expr.decl().decl_kind();
+                if (op == Z3_OP_LE) {
+                    expr = clause1 >= clause0;
+                } else if(op == Z3_OP_GE) {
+                    expr = clause1 <= clause0;
+                }
+            }
+            assert(clause1.is_numeral());
+            int64_t right_value = clause1.get_numeral_int64();
+            switch (expr.decl().decl_kind()) {
+                case Z3_OP_EQ:
+                if (!is_not_set) {
+                    val_max = right_value;
+                    val_min = val_max;
+                }
+                break;
+                case Z3_OP_LE:
+                if (is_not_set)
+                    val_min = std::max(val_min, right_value + 1);
+                else 
+                    val_max = std::min(val_max, right_value);
+                break;
+                case Z3_OP_GE:
+                if (is_not_set)
+                    val_max = std::min(val_max, right_value - 1);
+                else
+                    val_min = std::max(val_min, right_value);
+                break;
+                default:
+                info("Unhandled expr: ", expr.to_string());
+                break;
+            }
+        }
+        std::uniform_int_distribution<int> rf(val_min, val_max);
+        unsigned length = val_max - val_min;
+        constexpr unsigned DEFAULT_VARIABLE_MUTATE_TIMES = 5;
+        for(unsigned i = 0; i < std::min(length, DEFAULT_VARIABLE_MUTATE_TIMES) && cur_case < total_gen_cases; i++) {
+            int assigned_value = rf(random_g);
+            constraint_val_cur_value[val_name] = assigned_value;
+            z3::expr cons = (*var_i) == assigned_value;
+            m_smt_solver.push();
+            m_smt_solver.add(cons);
+            // info(m_smt_solver.to_smt2());
+            if(m_smt_solver.check() == z3::sat) {
+                mutateVar(next_var_i);
+            }
+            m_smt_solver.pop();
+        }
+        constraint_val_cur_value.erase(val_name);
+    }
 }// namespace ststgen
