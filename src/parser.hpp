@@ -1,10 +1,10 @@
 #pragma once
 
 #include <bitset>
+#include <random>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <random>
 
 #include "CBaseVisitor.h"
 #include "utils.hpp"
@@ -121,7 +121,7 @@ namespace ststgen {
     };
     class CConstraintVisitor : public c11parser::CBaseVisitor {
     public:
-        CConstraintVisitor(int case_number, bool is_positive): total_gen_cases(case_number),constraint_val_list(m_solver_context),all_expr_vector(m_solver_context) {
+        CConstraintVisitor(int case_number, bool is_positive) : total_gen_cases(case_number) {
             positive = is_positive ? 'P' : 'N';
         }
         std::any visitFunctionDefinition(c11parser::CParser::FunctionDefinitionContext *ctx) override;
@@ -150,9 +150,10 @@ namespace ststgen {
         std::any visitConditionalExpression(c11parser::CParser::ConditionalExpressionContext *ctx) override;
         std::any visitAssignmentExpression(c11parser::CParser::AssignmentExpressionContext *ctx) override;
         std::any visitExpression(c11parser::CParser::ExpressionContext *ctx) override;
+        using expr_iter = std::vector<z3::expr>::iterator;
         bool solve();
-        void update_constraint_val_map(z3::expr& clause, unsigned expr_id);
-        void mutateVar(z3::expr_vector::iterator var);
+        void update_constraint_val_map(z3::expr &clause, unsigned expr_id);
+        void mutateVar(expr_iter var_i);
         void setRandomSeed(unsigned s) {
             random_g = std::mt19937_64(s);
         }
@@ -172,17 +173,18 @@ namespace ststgen {
         unsigned total_gen_cases, cur_case;
         char positive;
         std::filesystem::path output_path;
-        z3::expr_vector constraint_val_list, all_expr_vector;
+        std::vector<z3::expr> constraint_val_list{};
+        std::vector<z3::expr> all_expr_vector{};
         std::map<unsigned, int> or_expr_idmap;
         std::map<std::string, std::vector<unsigned>> constraint_val_expr_idmap;
         std::map<std::string, int> constraint_val_cur_value;
 
         /// @deprecated
-        void set_length_constraint(const z3::expr& seq, const std::vector<int> &dims) {
+        void set_length_constraint(const z3::expr &seq, const std::vector<int> &dims) {
             auto t = std::vector(dims);
             set_length_constraint_rec(seq, t);
         }
-        void set_length_constraint_rec(const z3::expr& seq, std::vector<int> &dims) {
+        void set_length_constraint_rec(const z3::expr &seq, std::vector<int> &dims) {
             if (dims.empty()) {
                 return;
             }

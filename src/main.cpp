@@ -5,8 +5,8 @@
 
 #include <filesystem>
 #include <fmt/core.h>
-#include <z3++.h>
 #include <nlohmann/json.hpp>
+#include <z3++.h>
 
 // windows平台下CRT内存分析
 // #define _CRTDBG_MAP_ALLOC
@@ -45,7 +45,6 @@ void demorgan() {
     }
     model m = s.get_model();
     fmt::println("model: {}", m.to_string());
-
 }
 /**
    \brief Find x and y such that: x ^ y - 103 == x * y
@@ -63,7 +62,7 @@ void bitvector_example2() {
     std::cout << s.get_model() << "\n";
     fmt::println("model: {}", s.get_model().get_const_interp(x.decl()).to_string());
 }
-int main(int argc, char** argv) try {
+int main(int argc, char **argv) try {
     // demorgan();
     // bitvector_example2();
     // return 0;
@@ -81,21 +80,18 @@ int main(int argc, char** argv) try {
             "ratio of positive test cases",
             true,
             1,
-            cmdline::range(0.0,1.0)
-        );
+            cmdline::range(0.0, 1.0));
     cmd_parser.add<std::string>(
             "cons",
             'c',
             "constraint file path",
-            true
-        );
+            true);
     cmd_parser.add<std::string>(
-        "output",
-        'o',
-        "output cases store path",
-        false,
-        "out"
-    );
+            "output",
+            'o',
+            "output cases store path",
+            false,
+            "out");
     cmd_parser.parse_check(argc, argv);
     int num_cases = cmd_parser.get<int>("num_cases");
     double pos_ratio = cmd_parser.get<double>("pos_ratio");
@@ -103,7 +99,7 @@ int main(int argc, char** argv) try {
     int neg_cases = num_cases - pos_cases;
     auto cons = cmd_parser.get<std::string>("cons");
     std::ifstream cons_in{cons};
-    std::string cons_src{std::istreambuf_iterator<char>(cons_in),  std::istreambuf_iterator<char>()};
+    std::string cons_src{std::istreambuf_iterator<char>(cons_in), std::istreambuf_iterator<char>()};
     cons_in.close();
     auto output = cmd_parser.get<std::string>("output");
     if (!std::filesystem::exists(output)) {
