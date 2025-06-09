@@ -8,3 +8,4 @@ CMakeUserPresets.json
 .z3-trace
 .DS_store
 .cache
+/out/

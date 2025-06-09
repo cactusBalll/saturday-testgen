@@ -14,6 +14,7 @@
 #include <optional>
 #include <string_view>
 #include <z3++.h>
+#include "quickjs.h"
 
 namespace ststgen {
 
@@ -158,6 +159,7 @@ namespace ststgen {
             random_g = std::mt19937_64(s);
         }
         void mutateEntrance(std::string &outpath);
+        void writeCases();
         z3::expr replaceKnownVar(z3::expr inp, int &unknown_count);
 
     private:
@@ -178,6 +180,10 @@ namespace ststgen {
         std::map<unsigned, int> or_expr_idmap;
         std::map<std::string, std::vector<unsigned>> constraint_val_expr_idmap;
         std::map<std::string, int> constraint_val_cur_value;
+
+        std::string m_cons_src{};
+        std::vector<std::string> m_cons_expressions{};
+        std::vector<json> m_cases{};
 
         /// @deprecated
         void set_length_constraint(const z3::expr &seq, const std::vector<int> &dims) {

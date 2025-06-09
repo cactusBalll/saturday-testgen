@@ -40,6 +40,14 @@ target_sources(main PRIVATE ${ANTLR4_SRC_FILES_C11})
 target_include_directories(main PRIVATE "${ANTLR4_INCLUDE_DIR}")
 target_link_libraries(main PRIVATE antlr4_shared)
 
+#target_link_directories(main PRIVATE "${thirdparty}")
+#target_include_directories(main PRIVATE "${thirdparty}")
+#target_link_libraries(main PRIVATE thirdparty/qjs)
+
+add_subdirectory(quickjs EXCLUDE_FROM_ALL)
+target_link_libraries(main PRIVATE qjs)
+
+
 target_link_libraries(main PRIVATE fmt::fmt)
 
 target_include_directories(main PRIVATE ${Z3_C_INCLUDE_DIRS})

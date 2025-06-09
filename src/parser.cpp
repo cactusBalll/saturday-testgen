@@ -28,6 +28,7 @@ namespace ststgen {
         if (!expr.is_string_value()) {
             info("add cons: ", expr.to_string());
             m_smt_solver.add(expr);
+            m_cons_expressions.push_back(ctx->expression()->getText());
         }
         m_process_constraint_statement = false;
         return 0;
@@ -51,6 +52,7 @@ namespace ststgen {
         }
         if (process_constraints) {
             m_symbol_table.push_scope();
+            m_cons_src = ctx->compoundStatement()->getText();
             visit(ctx->compoundStatement());
             m_symbol_table.pop_scope();
         }
@@ -743,15 +745,8 @@ namespace ststgen {
         // for (const auto &[name, miu, sigma]: m_gaussian_cons) {
         //     fmt::println("gaussian constraint {}:(miu: {}, sigma: {})", name, miu, sigma);
         // }
-        std::filesystem::path outfile = output_path / fmt::format("{}{:05d}.json", positive, cur_case);
-        std::ofstream ofs(outfile);
-        if (ofs.is_open()) {
-            ofs << std::setw(4) << solve;
-            ofs.close();
-        } else {
-            info("Error: can not open", outfile.string(), "for output!");
-            std::cout << std::setw(4) << solve;
-        }
+
+        m_cases.push_back(solve);
         cur_case++;
         return true;
     }
@@ -800,6 +795,68 @@ namespace ststgen {
                 m_smt_solver.pop();
             }
             fmt::println("In mutate cycle {}, generated {} cases.", mutate_cycle, cur_case - this_cycle_begin_cases);
+        }
+    }
+    void CConstraintVisitor::writeCases() {
+        std::unordered_set<json> unique_cases{};
+        for (const auto &entry: m_cases) {
+            unique_cases.insert(entry);
+        }
+        // 去重
+        if (unique_cases.size() == m_cases.size()) {
+            fmt::println("all cases are unique.");
+        } else {
+            fmt::println("filtered out {} replicated cases.", m_cases.size() - unique_cases.size());
+        }
+        // 验证
+        auto templ = R"(var f = () => {{
+    var _LENGTH = (e) => {{
+        return e.length;
+    }};
+    var GAUSSIAN = (v, miu, va) => {{
+        return true;
+    }};
+    Object.assign(this, {});
+    return {};
+}};
+f();
+)";
+        std::string constraint_and{};
+        bool first = true;
+        for (const auto &con: m_cons_expressions) {
+            if (!first) {
+                constraint_and += " && ";
+            } else {
+                first = false;
+            }
+            constraint_and += "(";
+            constraint_and += con;
+            constraint_and += ")";
+        }
+        auto js_runtime = JS_NewRuntime();
+        auto js_ctx = JS_NewContext(js_runtime);
+        for (int i = 0; i < m_cases.size(); i++) {
+            auto js_src = fmt::format(templ, m_cases[i].dump(), constraint_and);
+            auto ret = JS_Eval(js_ctx, js_src.c_str(), js_src.size(), nullptr, 0);
+            bool is_positive = JS_VALUE_GET_TAG(ret) == JS_TAG_BOOL && JS_VALUE_GET_BOOL(ret);
+            if (positive == 'P' && !is_positive) {
+                fmt::println("constraint NOT positive but required positive: {}", i);
+            }
+            if (positive == 'N' && is_positive) {
+                fmt::println("constraint NOT negative but required negative: {}", i);
+            }
+        }
+        fmt::println("finish validating generated cases with QJS.");
+        for (int i = 0; i < m_cases.size(); i++) {
+            std::filesystem::path outfile = output_path / fmt::format("{}{:05d}.json", positive, i);
+            std::ofstream ofs(outfile);
+            if (ofs.is_open()) {
+                ofs << std::setw(4) << m_cases[i];
+                ofs.close();
+            } else {
+                info("Error: can not open", outfile.string(), "for output!");
+                std::cout << std::setw(4) << m_cases[i];
+            }
         }
     }
 

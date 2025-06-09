@@ -8,6 +8,8 @@
 #include <nlohmann/json.hpp>
 #include <z3++.h>
 
+#include "quickjs.h"
+
 // windows平台下CRT内存分析
 // #define _CRTDBG_MAP_ALLOC
 // #include <stdlib.h>
@@ -121,7 +123,7 @@ int main(int argc, char **argv) try {
     std::random_device rd;
     visitor_positive.setRandomSeed(rd());
     visitor_positive.mutateEntrance(output);
-
+    visitor_positive.writeCases();
     // windows平台下CRT内存分析
     // _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
     // _CrtDumpMemoryLeaks();
