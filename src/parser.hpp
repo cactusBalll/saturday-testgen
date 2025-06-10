@@ -58,9 +58,9 @@ namespace ststgen {
         std::optional<z3::expr> sym = std::nullopt;
     };
     struct GaussianCons {
-        std::string name{};
-        double miu{0.0};
-        double sigma{0.0};
+        z3::expr val;
+        std::normal_distribution<> normal_gen;
+        GaussianCons(const z3::expr &v, double mu, double sigma) : val(v), normal_gen(mu, sigma) {}
     };
     struct StructBlueprint {
         void push_member(const std::string &name, SymbolTableEntry &&member) {
@@ -160,6 +160,7 @@ namespace ststgen {
         }
         void mutateEntrance(std::string &outpath);
         void writeCases();
+        void generate_gaussian();
         z3::expr replaceKnownVar(z3::expr inp, int &unknown_count);
 
     private:

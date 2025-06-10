@@ -421,7 +421,8 @@ namespace ststgen {
                     // vari->cons |= GAUSSIAN;
                     // vari->miu = miu;
                     // vari->sigma = sigma;
-                    m_gaussian_cons.emplace_back(GaussianCons{name, miu, sigma});
+                    m_gaussian_cons.emplace_back(args[0], miu, sigma);
+                    info("Found GAUSSIAN for var: ", args[0].to_string());
                     return prime_expr;
                 } else {
                     info("constraint name: ", func_name);
@@ -692,22 +693,26 @@ namespace ststgen {
     }
 
     bool CConstraintVisitor::solve() {
+        m_smt_solver.push();
+        generate_gaussian();
         info("checking sat: ", m_smt_solver.to_smt2());
 
         auto res = m_smt_solver.check();
         if (res == z3::unsat) {
             fmt::println("constraint unsat");
+            m_smt_solver.pop();
             return false;
         }
         if (res == z3::unknown) {
             fmt::println("constraint unknown");
             fmt::println("reason: {}", m_smt_solver.reason_unknown());
+            m_smt_solver.pop();
             return false;
         }
-        fmt::println("constraint sat");
         auto model = m_smt_solver.get_model();
         fmt::print("solver: {}\n", m_smt_solver.to_smt2());
         fmt::print("model: {}\n", model.to_string());
+        m_smt_solver.pop();
         auto solve = json{};
         for (const auto &[name, entry]: m_symbol_table.get_scope(0)) {
             if (entry.qualifer == SymbolTableEntryQualifer::Primary) {
@@ -967,5 +972,15 @@ f();
             m_smt_solver.pop();
         }
         constraint_val_cur_value.erase(val_name);
+    }
+
+    void CConstraintVisitor::generate_gaussian() {
+        constexpr int64_t precision = 1e10;
+        for (auto &gauss_cons: m_gaussian_cons) {
+            auto expr = gauss_cons.val;
+            info(expr.to_string(), (int)expr.get_sort().sort_kind());
+            auto rand_value = gauss_cons.normal_gen(random_g);
+            m_smt_solver.add(expr == m_solver_context.real_val(rand_value * precision, precision));
+        }
     }
 }// namespace ststgen
