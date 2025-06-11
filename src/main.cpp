@@ -17,26 +17,36 @@
 // #include <crtdbg.h>
 
 std::mutex output_buffer_mutex{};
+using PII = std::pair<int, int>;
 
-void core_runner(const std::string &cons_src, const std::string &output, int pos_cases, int start_case_num, int thread_i) {
+void core_runner(const std::string &cons_src, const std::string &output, const PII cases, const PII start_case_num, const int thread_i) {
     antlr4::ANTLRInputStream input_stream(cons_src);
     c11parser::CLexer lexer(&input_stream);
     antlr4::CommonTokenStream token_stream(&lexer);
     c11parser::CParser parser(&token_stream);
     auto *tree = parser.compilationUnit();
-    auto visitor_positive = ststgen::CConstraintVisitor{pos_cases, true, start_case_num};
-    visitor_positive.visit(tree);
-
     std::random_device rd;
-    auto seed = rd();
-    visitor_positive.setRandomSeed(seed);
-    visitor_positive.mutateEntrance(output);
-    visitor_positive.writeCases();
 
-    {
-        std::lock_guard<std::mutex> lock(output_buffer_mutex);
-        fmt::println("\033[1;32mThread {} positive generator(seed: {}) output: \033[0m\n", thread_i, seed);
-        visitor_positive.print();
+    auto generate_cases = [&](int case_number, int start_i, bool is_positive) {
+        auto visitor = ststgen::CConstraintVisitor{case_number, is_positive, start_i};
+        visitor.visit(tree);
+        unsigned int seed = rd();
+        visitor.setRandomSeed(seed);
+        visitor.mutateEntrance(output);
+        visitor.writeCases();
+
+        {
+            std::lock_guard<std::mutex> lock(output_buffer_mutex);
+            fmt::println("\033[1;32mThread {} {} generator(seed: {}) output: \033[0m\n", thread_i, is_positive ? "positive" : "negative", seed);
+            visitor.print();
+        }
+    };
+
+    if (cases.first > 0) {
+        generate_cases(cases.first, start_case_num.first, true);
+    }
+    if (cases.second > 0) {
+        generate_cases(cases.second, start_case_num.second, false);
     }
 }
 
@@ -100,18 +110,22 @@ int main(int argc, char **argv) try {
     thread_num = std::min(thread_num, 65535);
 
     // schedule threads
-    auto case_per_thread = pos_cases / thread_num;
-    const auto remained_cases = pos_cases - case_per_thread * (thread_num - 1);
-    auto start_case_num = 0;
+    PII case_per_thread = {pos_cases / thread_num, neg_cases / thread_num};
+    auto calculate_remained_cases = [thread_num](int cases_num, int per_thread) {
+        return cases_num - per_thread * (thread_num - 1);
+    };
+    const PII remained_cases = {calculate_remained_cases(pos_cases, case_per_thread.first), calculate_remained_cases(neg_cases, case_per_thread.second)};
+    PII start_case_num{0, 0};
     std::vector<std::thread> threads;
-        
+
     for (auto i = 1; i <= thread_num; i++) {
         if (i == thread_num) {
             // the last thread may not generate the same number of cases
             case_per_thread = remained_cases;
         }
-        threads.emplace_back(std::thread(core_runner, cons_src, output, pos_cases, start_case_num, i));
-        start_case_num += case_per_thread;
+        threads.emplace_back(std::thread(core_runner, cons_src, output, case_per_thread, start_case_num, i));
+        start_case_num.first += case_per_thread.first;
+        start_case_num.second += case_per_thread.second;
     }
     // wait for all thread finish their work
     for (auto &t: threads) {

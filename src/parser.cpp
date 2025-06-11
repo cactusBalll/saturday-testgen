@@ -856,6 +856,7 @@ f();
                 info("Error: can not open", outfile.string(), "for output!");
                 std::cout << std::setw(4) << single_case;
             }
+            cnt++;
         }
         println_local("finish validating generated cases with QJS.");
     }
