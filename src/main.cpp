@@ -29,16 +29,28 @@ void core_runner(const std::string &cons_src, const std::string &output, const P
 
     auto generate_cases = [&](int case_number, int start_i, bool is_positive) {
         auto visitor = ststgen::CConstraintVisitor{case_number, is_positive, start_i};
+        auto time_begin = std::chrono::steady_clock::now();
         visitor.visit(tree);
+        auto time_parse_cpp = std::chrono::steady_clock::now();
         unsigned int seed = rd();
         visitor.setRandomSeed(seed);
         visitor.mutateEntrance(output);
+        auto time_generate = std::chrono::steady_clock::now();
         visitor.writeCases();
+        auto time_validate_and_write = std::chrono::steady_clock::now();
+        std::chrono::nanoseconds parse_cpp_elapsed = time_parse_cpp - time_begin;
+        std::chrono::nanoseconds generate_elapsed = time_generate - time_parse_cpp;
+        std::chrono::nanoseconds validate_and_write_elapsed = time_validate_and_write - time_generate;
 
         {
             std::lock_guard<std::mutex> lock(output_buffer_mutex);
             fmt::println("\033[1;32mThread {} {} generator(seed: {}) output: \033[0m\n", thread_i, is_positive ? "positive" : "negative", seed);
             visitor.print();
+            fmt::println("\033[34mParse cpp time:\t\t\t{}s\nGenerate cases time:\t\t{}s\nValidate and write cases time:\t{}s\n\033[0m", 
+                parse_cpp_elapsed.count() / 1e9,
+                generate_elapsed.count() / 1e9,
+                validate_and_write_elapsed.count() / 1e9
+            );
         }
     };
 
