@@ -699,19 +699,19 @@ namespace ststgen {
 
         auto res = m_smt_solver.check();
         if (res == z3::unsat) {
-            fmt::println("constraint unsat");
+            is_verbose println_local("constraint unsat");
             m_smt_solver.pop();
             return false;
         }
         if (res == z3::unknown) {
-            fmt::println("constraint unknown");
-            fmt::println("reason: {}", m_smt_solver.reason_unknown());
+            is_verbose println_local("constraint unknown");
+            is_verbose println_local("reason: {}", m_smt_solver.reason_unknown());
             m_smt_solver.pop();
             return false;
         }
         auto model = m_smt_solver.get_model();
-        fmt::print("solver: {}\n", m_smt_solver.to_smt2());
-        fmt::print("model: {}\n", model.to_string());
+        is_verbose println_local("solver: {}\n", m_smt_solver.to_smt2());
+        is_verbose println_local("model: {}\n", model.to_string());
         m_smt_solver.pop();
         auto solve = json{};
         for (const auto &[name, entry]: m_symbol_table.get_scope(0)) {
@@ -756,7 +756,7 @@ namespace ststgen {
         return true;
     }
 
-    void CConstraintVisitor::mutateEntrance(std::string &outpath) {
+    void CConstraintVisitor::mutateEntrance(const std::string &outpath) {
         cur_case = 0;
         output_path = outpath;
         info("after parse: ", m_smt_solver.to_smt2());
@@ -799,7 +799,7 @@ namespace ststgen {
                 }
                 m_smt_solver.pop();
             }
-            fmt::println("In mutate cycle {}, generated {} cases.", mutate_cycle, cur_case - this_cycle_begin_cases);
+            println_local("In mutate cycle {}, generated {} cases.", mutate_cycle, cur_case - this_cycle_begin_cases);
         }
     }
     void CConstraintVisitor::writeCases() {
@@ -809,9 +809,9 @@ namespace ststgen {
         }
         // 去重
         if (unique_cases.size() == m_cases.size()) {
-            fmt::println("all cases are unique.");
+            println_local("all cases are unique.");
         } else {
-            fmt::println("filtered out {} replicated cases.", m_cases.size() - unique_cases.size());
+            println_local("filtered out {} replicated cases.", m_cases.size() - unique_cases.size());
         }
         // 验证
         auto templ = R"(var f = () => {{
@@ -845,15 +845,15 @@ f();
             auto ret = JS_Eval(js_ctx, js_src.c_str(), js_src.size(), nullptr, 0);
             bool is_positive = JS_VALUE_GET_TAG(ret) == JS_TAG_BOOL && JS_VALUE_GET_BOOL(ret);
             if (positive == 'P' && !is_positive) {
-                fmt::println("constraint NOT positive but required positive: {}", i);
+                println_local("constraint NOT positive but required positive: {}", i + case_number_start);
             }
             if (positive == 'N' && is_positive) {
-                fmt::println("constraint NOT negative but required negative: {}", i);
+                println_local("constraint NOT negative but required negative: {}", i + case_number_start);
             }
         }
-        fmt::println("finish validating generated cases with QJS.");
+        println_local("finish validating generated cases with QJS.");
         for (int i = 0; i < m_cases.size(); i++) {
-            std::filesystem::path outfile = output_path / fmt::format("{}{:05d}.json", positive, i);
+            std::filesystem::path outfile = output_path / fmt::format("{}{:05d}.json", positive, i + case_number_start);
             std::ofstream ofs(outfile);
             if (ofs.is_open()) {
                 ofs << std::setw(4) << m_cases[i];

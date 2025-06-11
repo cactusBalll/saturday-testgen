@@ -9,12 +9,12 @@
 #include "CBaseVisitor.h"
 #include "utils.hpp"
 
+#include "quickjs.h"
 #include <any>
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <string_view>
 #include <z3++.h>
-#include "quickjs.h"
 
 namespace ststgen {
 
@@ -122,7 +122,7 @@ namespace ststgen {
     };
     class CConstraintVisitor : public c11parser::CBaseVisitor {
     public:
-        CConstraintVisitor(int case_number, bool is_positive) : total_gen_cases(case_number) {
+        CConstraintVisitor(int case_number, bool is_positive, int case_number_start) : total_gen_cases(case_number), case_number_start(case_number_start) {
             positive = is_positive ? 'P' : 'N';
         }
         std::any visitFunctionDefinition(c11parser::CParser::FunctionDefinitionContext *ctx) override;
@@ -158,7 +158,7 @@ namespace ststgen {
         void setRandomSeed(unsigned s) {
             random_g = std::mt19937_64(s);
         }
-        void mutateEntrance(std::string &outpath);
+        void mutateEntrance(const std::string &outpath);
         void writeCases();
         void generate_gaussian();
         z3::expr replaceKnownVar(z3::expr inp, int &unknown_count);
@@ -186,6 +186,19 @@ namespace ststgen {
         std::vector<std::string> m_cons_expressions{};
         std::vector<json> m_cases{};
 
+        fmt::memory_buffer local_log{};
+
+    public:
+        [[nodiscard]] const fmt::memory_buffer &get_local_log() const { return local_log; }
+
+    private:
+        int case_number_start = 0;
+
+        template<typename... T>
+        void println_local(fmt::format_string<T...> fmt, T &&...args) {
+            auto iter = fmt::format_to(std::back_inserter(local_log), fmt, args...);
+            fmt::format_to(iter, "\n");
+        }
         /// @deprecated
         void set_length_constraint(const z3::expr &seq, const std::vector<int> &dims) {
             auto t = std::vector(dims);

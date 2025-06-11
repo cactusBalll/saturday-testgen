@@ -2,10 +2,12 @@
 
 #include <exception>
 #include <fmt/core.h>
+#include <mutex>
 #include <stdexcept>
 
 namespace ststgen {
     extern int g_log_level;
+    extern std::mutex g_log_mutex;
     template<typename T1, typename... T2>
     void _log1(const T1 &x, const T2 &...xs) {
         fmt::print(stderr, "{} ", x);
@@ -16,6 +18,7 @@ namespace ststgen {
 
     template<typename T1, typename... T2>
     void _log(const char *file, int line, const T1 &x, const T2 &...xs) {
+        std::lock_guard<std::mutex> lock(g_log_mutex);
         if (g_log_level > 0) {
             fmt::print(stderr, "{}:{} ", file, line);
             fmt::print(stderr, "{} ", x);
@@ -44,5 +47,6 @@ namespace ststgen {
 #define unimplemented() panic("unimplemented")
 #define unreachable() panic("unreachable")
 #define todo() panic("todo")
+#define is_verbose if(g_log_level > 0)
 
 }// namespace ststgen
