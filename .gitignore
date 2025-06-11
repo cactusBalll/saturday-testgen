@@ -9,3 +9,4 @@ CMakeUserPresets.json
 .DS_store
 .cache
 /out/
+/docs/authors.typ
