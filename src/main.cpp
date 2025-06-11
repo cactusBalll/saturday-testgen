@@ -15,60 +15,32 @@
 // #define _CRTDBG_MAP_ALLOC
 // #include <stdlib.h>
 // #include <crtdbg.h>
-using namespace z3;
 
-void demorgan() {
-    std::cout << "de-Morgan example\n";
+std::mutex output_buffer_mutex{};
 
-    context c;
+void core_runner(const std::string &cons_src, const std::string &output, int pos_cases, int start_case_num, int thread_i) {
+    antlr4::ANTLRInputStream input_stream(cons_src);
+    c11parser::CLexer lexer(&input_stream);
+    antlr4::CommonTokenStream token_stream(&lexer);
+    c11parser::CParser parser(&token_stream);
+    auto *tree = parser.compilationUnit();
+    auto visitor_positive = ststgen::CConstraintVisitor{pos_cases, true, start_case_num};
+    visitor_positive.visit(tree);
 
-    expr x = c.bool_const("x");
-    expr y = c.bool_const("y");
-    expr conjecture = (!(x && y)) == (!x || !y);
-    auto int_sort = c.int_sort();
-    expr seq = c.constant("s", c.seq_sort(int_sort));
+    std::random_device rd;
+    auto seed = rd();
+    visitor_positive.setRandomSeed(seed);
+    visitor_positive.mutateEntrance(output);
+    visitor_positive.writeCases();
 
-    solver s(c);
-    // adding the negation of the conjecture as a constraint.
-    s.add(conjecture);
-    // std::cout << s << "\n";
-    // std::cout << s.to_smt2() << "\n";
-    // fmt::println("{}", x.to_string());
-    // fmt::println("{}", seq.get_sort().to_string());
-    switch (s.check()) {
-        case unsat:
-            std::cout << "de-Morgan is valid\n";
-            break;
-        case sat:
-            std::cout << "de-Morgan is not valid\n";
-            break;
-        case unknown:
-            std::cout << "unknown\n";
-            break;
+    {
+        std::lock_guard<std::mutex> lock(output_buffer_mutex);
+        fmt::println("\033[1;32mThread {} positive generator(seed: {}) output: \033[0m\n", thread_i, seed);
+        visitor_positive.print();
     }
-    model m = s.get_model();
-    fmt::println("model: {}", m.to_string());
 }
-/**
-   \brief Find x and y such that: x ^ y - 103 == x * y
-*/
-void bitvector_example2() {
-    std::cout << "bitvector example 2\n";
-    context c;
-    expr x = c.bv_const("x", 32);
-    expr y = c.bv_const("y", 32);
-    solver s(c);
-    // In C++, the operator == has higher precedence than ^.
-    s.add((x ^ y) - 103 == x * y);
-    std::cout << s << "\n";
-    std::cout << s.check() << "\n";
-    std::cout << s.get_model() << "\n";
-    fmt::println("model: {}", s.get_model().get_const_interp(x.decl()).to_string());
-}
+
 int main(int argc, char **argv) try {
-    // demorgan();
-    // bitvector_example2();
-    // return 0;
     cmdline::parser cmd_parser;
     cmd_parser.add<int>(
             "num_cases",
@@ -125,74 +97,27 @@ int main(int argc, char **argv) try {
         ststgen::g_log_level = 0;
     }
     int thread_num = cmd_parser.get<int>("thread");
-    int max_thread_num = static_cast<int>(std::thread::hardware_concurrency());
-    thread_num = std::min(thread_num, max_thread_num);
+    thread_num = std::min(thread_num, 65535);
 
     // schedule threads
-    if (thread_num == 1) {
-        // single threaded
-        // antlr parser
-        antlr4::ANTLRInputStream input_stream(cons_src);
-        c11parser::CLexer lexer(&input_stream);
-        antlr4::CommonTokenStream token_stream(&lexer);
-        c11parser::CParser parser(&token_stream);
-        auto *tree = parser.compilationUnit();
-        // auto p_visitor = std::make_unique<ststgen::CConstraintVisitor>();
-        // p_visitor->visit(tree);
-        // p_visitor->solve();
-        auto visitor_positive = ststgen::CConstraintVisitor{pos_cases, true, 0};
-        visitor_positive.visit(tree);
-
-        std::random_device rd;
-        visitor_positive.setRandomSeed(rd());
-        visitor_positive.mutateEntrance(output);
-        visitor_positive.writeCases();
-
-        fmt::println("{}", fmt::to_string(visitor_positive.get_local_log()));
-    } else {
-        auto case_per_thread = pos_cases / (thread_num - 1);
-        const auto remained_cases = pos_cases - case_per_thread * (thread_num - 1);
-        auto start_case_num = 0;
-        std::vector<std::thread> threads;
-
-        std::string output_buffer{};
-        std::mutex output_buffer_mutex{};
-        for (auto i = 0; i < thread_num; i++) {
-            if (i == thread_num - 1) {
-                // the last thread may not generate the same number of cases
-                case_per_thread = remained_cases;
-            }
-            auto t = std::thread([cons_src, start_case_num, case_per_thread, output, &output_buffer, &output_buffer_mutex, i]() {
-                antlr4::ANTLRInputStream input_stream(cons_src);
-                c11parser::CLexer lexer(&input_stream);
-                antlr4::CommonTokenStream token_stream(&lexer);
-                c11parser::CParser parser(&token_stream);
-                auto *tree = parser.compilationUnit();
-                // auto p_visitor = std::make_unique<ststgen::CConstraintVisitor>();
-                // p_visitor->visit(tree);
-                // p_visitor->solve();
-                auto visitor_positive = ststgen::CConstraintVisitor{case_per_thread, true, start_case_num};
-                visitor_positive.visit(tree);
-
-                std::random_device rd;
-                visitor_positive.setRandomSeed(rd());
-                visitor_positive.mutateEntrance(output);
-                visitor_positive.writeCases();
-                std::lock_guard<std::mutex> lock(output_buffer_mutex);
-                output_buffer += fmt::format("Thread {} output: \n", i);
-                output_buffer += fmt::to_string(visitor_positive.get_local_log());
-            });
-            threads.emplace_back(std::move(t));
-            start_case_num += case_per_thread;
+    auto case_per_thread = pos_cases / thread_num;
+    const auto remained_cases = pos_cases - case_per_thread * (thread_num - 1);
+    auto start_case_num = 0;
+    std::vector<std::thread> threads;
+        
+    for (auto i = 1; i <= thread_num; i++) {
+        if (i == thread_num) {
+            // the last thread may not generate the same number of cases
+            case_per_thread = remained_cases;
         }
-        // wait for all thread finish their work
-        for (auto &t: threads) {
-            t.join();
-        }
-
-        fmt::println("{}", output_buffer);
-        fmt::println("ALL DONE");
+        threads.emplace_back(std::thread(core_runner, cons_src, output, pos_cases, start_case_num, i));
+        start_case_num += case_per_thread;
     }
+    // wait for all thread finish their work
+    for (auto &t: threads) {
+        t.join();
+    }
+    fmt::println("ALL DONE");
 
 
     // windows平台下CRT内存分析

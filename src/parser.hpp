@@ -5,6 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <thread>
 
 #include "CBaseVisitor.h"
 #include "utils.hpp"
@@ -162,6 +163,10 @@ namespace ststgen {
         void writeCases();
         void generate_gaussian();
         z3::expr replaceKnownVar(z3::expr inp, int &unknown_count);
+        void print() {
+            fmt::print("{}", local_log.data());
+        }
+
 
     private:
         // 析构顺序相关，因为是反方向依次析构，所以必须保证求解器和求解器上下文在最前面
@@ -184,12 +189,9 @@ namespace ststgen {
 
         std::string m_cons_src{};
         std::vector<std::string> m_cons_expressions{};
-        std::vector<json> m_cases{};
+        std::unordered_set<json> m_cases{};
 
         fmt::memory_buffer local_log{};
-
-    public:
-        [[nodiscard]] const fmt::memory_buffer &get_local_log() const { return local_log; }
 
     private:
         int case_number_start = 0;

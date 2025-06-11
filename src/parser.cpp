@@ -751,8 +751,8 @@ namespace ststgen {
         //     fmt::println("gaussian constraint {}:(miu: {}, sigma: {})", name, miu, sigma);
         // }
 
-        m_cases.push_back(solve);
-        cur_case++;
+        m_cases.emplace(std::move(solve));
+        cur_case = m_cases.size();
         return true;
     }
 
@@ -803,16 +803,6 @@ namespace ststgen {
         }
     }
     void CConstraintVisitor::writeCases() {
-        std::unordered_set<json> unique_cases{};
-        for (const auto &entry: m_cases) {
-            unique_cases.insert(entry);
-        }
-        // 去重
-        if (unique_cases.size() == m_cases.size()) {
-            println_local("all cases are unique.");
-        } else {
-            println_local("filtered out {} replicated cases.", m_cases.size() - unique_cases.size());
-        }
         // 验证
         auto templ = R"(var f = () => {{
     var _LENGTH = (e) => {{
@@ -826,43 +816,48 @@ namespace ststgen {
 }};
 f();
 )";
-        std::string constraint_and{};
+        std::string constraint_set{};
         bool first = true;
         for (const auto &con: m_cons_expressions) {
             if (!first) {
-                constraint_and += " && ";
+                if (positive == 'P')
+                    constraint_set += " && ";
+                else if(positive == 'N')
+                    constraint_set += " || ";
             } else {
                 first = false;
             }
-            constraint_and += "(";
-            constraint_and += con;
-            constraint_and += ")";
+            constraint_set += "(";
+            constraint_set += con;
+            constraint_set += ")";
         }
         auto js_runtime = JS_NewRuntime();
         auto js_ctx = JS_NewContext(js_runtime);
-        for (int i = 0; i < m_cases.size(); i++) {
-            auto js_src = fmt::format(templ, m_cases[i].dump(), constraint_and);
+        int cnt = 0;
+        for (auto &single_case : m_cases) {
+            auto js_src = fmt::format(templ, single_case.dump(), constraint_set);
             auto ret = JS_Eval(js_ctx, js_src.c_str(), js_src.size(), nullptr, 0);
             bool is_positive = JS_VALUE_GET_TAG(ret) == JS_TAG_BOOL && JS_VALUE_GET_BOOL(ret);
             if (positive == 'P' && !is_positive) {
-                println_local("constraint NOT positive but required positive: {}", i + case_number_start);
+                println_local("constraint NOT positive but required positive: {}", cnt + case_number_start);
+                continue;
             }
             if (positive == 'N' && is_positive) {
-                println_local("constraint NOT negative but required negative: {}", i + case_number_start);
+                println_local("constraint NOT negative but required negative: {}", cnt + case_number_start);
+                continue;
             }
-        }
-        println_local("finish validating generated cases with QJS.");
-        for (int i = 0; i < m_cases.size(); i++) {
-            std::filesystem::path outfile = output_path / fmt::format("{}{:05d}.json", positive, i + case_number_start);
+            // Output
+            std::filesystem::path outfile = output_path / fmt::format("{}{:05d}.json", positive, cnt + case_number_start);
             std::ofstream ofs(outfile);
             if (ofs.is_open()) {
-                ofs << std::setw(4) << m_cases[i];
+                ofs << std::setw(4) << single_case;
                 ofs.close();
             } else {
                 info("Error: can not open", outfile.string(), "for output!");
-                std::cout << std::setw(4) << m_cases[i];
+                std::cout << std::setw(4) << single_case;
             }
         }
+        println_local("finish validating generated cases with QJS.");
     }
 
     z3::expr CConstraintVisitor::replaceKnownVar(z3::expr inp, int &unknown_count) {
