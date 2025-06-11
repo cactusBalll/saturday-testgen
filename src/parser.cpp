@@ -74,7 +74,9 @@ namespace ststgen {
 
         for (auto typ: decl_list->declarationSpecifier()) {
             if (auto typ_s = typ->typeSpecifier()) {
-                if (typ_s->Char() || typ_s->Short() || typ_s->Int() || typ_s->Long() || typ_s->Signed()) {
+                if (typ_s->Char() || typ_s->Short() || typ_s->Int() || typ_s->Signed()) {
+                    base_type = SymbolTableEntryType::Int32;
+                } else if (typ_s->Long()) {
                     base_type = SymbolTableEntryType::Int64;
                 } else if (typ_s->Unsigned()) {
                     base_type = SymbolTableEntryType::UInt64;
@@ -105,11 +107,14 @@ namespace ststgen {
                                 if (typ_s_member->Char() ||
                                     typ_s_member->Short() ||
                                     typ_s_member->Int() ||
-                                    typ_s_member->Long() ||
                                     typ_s_member->Signed()) {
+                                    base_typ_member = SymbolTableEntryType::Int32;
+                                    break;
+                                } else if (typ_s_member->Long()) {
                                     base_typ_member = SymbolTableEntryType::Int64;
                                     break;
-                                } else if (typ_s_member->Unsigned()) {
+                                }
+                                else if (typ_s_member->Unsigned()) {
                                     base_typ_member = SymbolTableEntryType::UInt64;
                                     break;
                                 } else if (typ_s_member->Float() || typ_s_member->Double()) {
@@ -695,7 +700,7 @@ namespace ststgen {
     bool CConstraintVisitor::solve() {
         m_smt_solver.push();
         generate_gaussian();
-        info("checking sat: ", m_smt_solver.to_smt2());
+        // info("checking sat: ", m_smt_solver.to_smt2());
 
         auto res = m_smt_solver.check();
         if (res == z3::unsat) {
@@ -710,8 +715,8 @@ namespace ststgen {
             return false;
         }
         auto model = m_smt_solver.get_model();
-        is_verbose println_local("solver: {}\n", m_smt_solver.to_smt2());
-        is_verbose println_local("model: {}\n", model.to_string());
+        // is_verbose println_local("solver: {}\n", m_smt_solver.to_smt2());
+        // is_verbose println_local("model: {}\n", model.to_string());
         m_smt_solver.pop();
         auto solve = json{};
         for (const auto &[name, entry]: m_symbol_table.get_scope(0)) {
@@ -722,6 +727,11 @@ namespace ststgen {
                     entry.type == SymbolTableEntryType::UInt64) {
                     auto subst = model.get_const_interp(entry.sym->decl());
                     auto v = subst.as_int64();
+                    if (entry.type == SymbolTableEntryType::Int32 || entry.type == SymbolTableEntryType::UInt32) {
+                        if (v > INT_MAX || v < INT_MIN) {
+                            throw std::exception();
+                        }
+                    }
                     solve[name] = v;
                 } else if (entry.type == SymbolTableEntryType::Float32 || entry.type == SymbolTableEntryType::Float64) {
                     auto subst = model.get_const_interp(entry.sym->decl());
@@ -756,11 +766,28 @@ namespace ststgen {
         return true;
     }
 
+    void CConstraintVisitor::random_flip_expr(z3::expr_vector &original_exprs) {
+        std::uniform_int_distribution<> random_bool(0,1);
+        auto status = z3::unknown;
+        while (status != z3::sat) {
+            m_smt_solver.reset();
+            for(auto exp : original_exprs) {
+                if (random_bool(random_g)) {
+                    m_smt_solver.add(!exp);
+                } else {
+                    m_smt_solver.add(exp);
+                }
+            }
+            status = m_smt_solver.check();
+        }
+    }
+
     void CConstraintVisitor::mutateEntrance(const std::string &outpath) {
         cur_case = 0;
         output_path = outpath;
         info("after parse: ", m_smt_solver.to_smt2());
-        if (m_smt_solver.check() != z3::sat) {
+        auto original_exprs = m_smt_solver.assertions();
+        if (positive == 'P' && m_smt_solver.check() != z3::sat) {
             info("The original constraint can not solve!");
             return;
         }
@@ -768,6 +795,15 @@ namespace ststgen {
         for (int mutate_cycle = 1; cur_case < total_gen_cases; mutate_cycle++) {
             int this_cycle_begin_cases = cur_case;
             assert(constraint_val_cur_value.empty());
+            // Rotate the constraint variable order to generate various cases.
+            std::shuffle(constraint_val_list.begin(), constraint_val_list.end(), random_g);
+
+            if (positive == 'N') {
+                random_flip_expr(original_exprs);
+                // In negative mode, we do not need to proceed or expr.
+                or_expr_idmap.clear();
+            }
+
             if (or_expr_idmap.empty()) {
                 mutateVar(constraint_val_list.begin());
             } else {// 从若干或语句中任意激活一条
@@ -792,6 +828,7 @@ namespace ststgen {
                     m_smt_solver.add(all_expr_vector[choosed_it->first]);
                     last_or_class = cur_class;
                     cur_or_exprs.clear();
+                    // Push the new class's first or_expr
                     cur_or_exprs.push_back(it);
                 }
                 if (m_smt_solver.check() == z3::sat) {
@@ -813,9 +850,9 @@ namespace ststgen {
     }};
     Object.assign(this, {});
     return {};
-}};
-f();
-)";
+    }};
+    f();
+    )";
         std::string constraint_set{};
         bool first = true;
         for (const auto &con: m_cons_expressions) {
@@ -840,10 +877,12 @@ f();
             bool is_positive = JS_VALUE_GET_TAG(ret) == JS_TAG_BOOL && JS_VALUE_GET_BOOL(ret);
             if (positive == 'P' && !is_positive) {
                 println_local("constraint NOT positive but required positive: {}", cnt + case_number_start);
+                println_local("{}", single_case.dump(4));
                 continue;
             }
             if (positive == 'N' && is_positive) {
                 println_local("constraint NOT negative but required negative: {}", cnt + case_number_start);
+                println_local("{}", single_case.dump(4));
                 continue;
             }
             // Output
@@ -914,9 +953,11 @@ f();
             assert(expr.num_args() == 2);
             auto clause0 = expr.arg(0);
             auto clause1 = expr.arg(1);
-
-            assert(clause0.to_string() == val_name || clause1.to_string() == val_name);
-            if (clause0.to_string() != val_name && clause1.to_string() == val_name) {
+            bool val_is_clause0;
+            if (clause0.to_string().find(val_name) != std::string::npos) {
+                val_is_clause0 = true;
+            } else if(clause1.to_string().find(val_name) != std::string::npos) {
+                val_is_clause0 = false;
                 clause1 = clause0;
                 auto op = expr.decl().decl_kind();
                 if (op == Z3_OP_LE) {
@@ -925,6 +966,7 @@ f();
                     expr = clause1 <= clause0;
                 }
             }
+
             assert(clause1.is_numeral());
             int64_t right_value = clause1.get_numeral_int64();
             switch (expr.decl().decl_kind()) {
@@ -935,15 +977,15 @@ f();
                     }
                     break;
                 case Z3_OP_LE:
-                    if (is_not_set)
+                    if (is_not_set) // >
                         val_min = std::max(val_min, right_value + 1);
-                    else
+                    else // <=
                         val_max = std::min(val_max, right_value);
                     break;
                 case Z3_OP_GE:
-                    if (is_not_set)
+                    if (is_not_set) // <
                         val_max = std::min(val_max, right_value - 1);
-                    else
+                    else // >=
                         val_min = std::max(val_min, right_value);
                     break;
                 default:
@@ -951,9 +993,14 @@ f();
                     break;
             }
         }
+        if (val_min > INT_MAX || val_max < INT_MIN || val_max < val_min) {
+            info("Overflow, skip!");
+            return;
+        }
+        // Random choose a number in [val_min, val_max]
         std::uniform_int_distribution<int> rf(val_min, val_max);
-        unsigned length = val_max - val_min;
-        constexpr unsigned DEFAULT_VARIABLE_MUTATE_TIMES = 5;
+        uint64_t length = val_max - val_min + 1;
+        constexpr uint64_t DEFAULT_VARIABLE_MUTATE_TIMES = 3;
         for (unsigned i = 0; i < std::min(length, DEFAULT_VARIABLE_MUTATE_TIMES) && cur_case < total_gen_cases; i++) {
             int assigned_value = rf(random_g);
             constraint_val_cur_value[val_name] = assigned_value;
@@ -961,9 +1008,14 @@ f();
             m_smt_solver.push();
             m_smt_solver.add(cons);
             // info(m_smt_solver.to_smt2());
-            if (m_smt_solver.check() == z3::sat) {
-                solve();
-                mutateVar(next_var_i);
+            try {
+                if (m_smt_solver.check() == z3::sat) {
+                    solve();
+                    mutateVar(next_var_i);
+                }
+            } catch(std::exception) {
+                m_smt_solver.pop();
+                break;
             }
             m_smt_solver.pop();
         }

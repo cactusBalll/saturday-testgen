@@ -163,8 +163,9 @@ namespace ststgen {
         void writeCases();
         void generate_gaussian();
         z3::expr replaceKnownVar(z3::expr inp, int &unknown_count);
+        void random_flip_expr(z3::expr_vector &original_exprs);
         void print() {
-            fmt::print("{}", local_log.data());
+            fmt::print("{}", fmt::to_string(local_log));
         }
 
 
@@ -272,6 +273,7 @@ namespace ststgen {
         }
         enum class ValueType {
             Int,
+            Int64,
             Real,
             Struct,
         };
@@ -286,7 +288,15 @@ namespace ststgen {
                     auto idx = m_solver_context.int_val(i);
                     auto v_sym = model.eval(seq[idx]);
                     if (value_type == ValueType::Int) {
-                        ret.push_back(v_sym.as_int64());
+                        auto r = v_sym.as_int64();
+                        if (r > INT_MAX || r < INT_MIN) {
+                            throw std::exception();
+                        }
+                        ret.push_back(r);
+                    }
+                    if (value_type == ValueType::Int64) {
+                        auto r = v_sym.as_int64();
+                        ret.push_back(r);
                     }
                     if (value_type == ValueType::Real) {
                         ret.push_back(v_sym.as_double());
@@ -320,7 +330,13 @@ namespace ststgen {
                         member_entry.type == SymbolTableEntryType::Int64 ||
                         member_entry.type == SymbolTableEntryType::UInt32 ||
                         member_entry.type == SymbolTableEntryType::UInt64) {
-                        ret[member_name] = member_sym.as_int64();
+                        auto v = member_sym.as_int64();
+                        if (entry.type == SymbolTableEntryType::Int32 || entry.type == SymbolTableEntryType::UInt32) {
+                            if (v > INT_MAX || v < INT_MIN) {
+                                throw std::exception();
+                            }
+                        }
+                        ret[member_name] = v;
                     } else if (member_entry.type == SymbolTableEntryType::Float32 ||
                                member_entry.type == SymbolTableEntryType::Float64) {
                         ret[member_name] = member_sym.as_double();
@@ -347,10 +363,12 @@ namespace ststgen {
 
         static ValueType entry_type_2_value_type(SymbolTableEntryType type) {
             if (type == SymbolTableEntryType::Int32 ||
-                type == SymbolTableEntryType::Int64 ||
-                type == SymbolTableEntryType::UInt32 ||
-                type == SymbolTableEntryType::UInt64) {
+                type == SymbolTableEntryType::UInt32) {
                 return ValueType::Int;
+            }
+            if (type == SymbolTableEntryType::Int64 ||
+                type == SymbolTableEntryType::UInt64) {
+                return ValueType::Int64;
             }
             if (type == SymbolTableEntryType::Float32 ||
                 type == SymbolTableEntryType::Float64) {
