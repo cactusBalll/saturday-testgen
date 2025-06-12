@@ -1,0 +1,1160 @@
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:66 proccess declaration int_LENGTH(void*ptr); 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:331 constraint primitive decl:  _LENGTH 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:66 proccess declaration voidGAUSSIAN(doubleVAR,doublemu,doublesigma); 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:331 constraint primitive decl:  GAUSSIAN 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:66 proccess declaration typedefstruct{inta;intb;doublec;int*d;}S1; 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:272 member getter:  (ast-vector
+  (declare-fun a (S1) Int)
+  (declare-fun b (S1) Int)
+  (declare-fun c (S1) Real)
+  (declare-fun d (S1) (Seq Int))) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:66 proccess declaration inta; 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:66 proccess declaration intb[3]; 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:66 proccess declaration structS1s[2]; 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:38 process function definition void_CONSTRAINT(){a>5&&a<10;b[1]>b[2]||b[0]<b[1];a+b[0]!=s[0].a;_LENGTH(s[0].d)>6&&_LENGTH(s[0].d)<10;_LENGTH(s[1].d)>6&&_LENGTH(s[1].d)<10;s[0].d[6]+s[1].d[6]==s[0].b*s[1].b;GAUSSIAN(s[0].c,1.0,1.0);} 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:46 var decl:  ; 
+(set-info :status unknown)
+(check-sat)
+ 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:693 found new val:  a 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:29 add cons:  (and true (> a 5) (< a 10)) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  1 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  b 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  2 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  b 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:693 found new val:  (select b 1) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:693 found new val:  (select b 2) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:641 add clause into or_expr_idmap:  0 2 (> (select b 1) (select b 2)) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  0 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  b 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  1 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  b 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:693 found new val:  (select b 0) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:641 add clause into or_expr_idmap:  0 3 (< (select b 0) (select b 1)) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:29 add cons:  (or false (> (select b 1) (select b 2)) (< (select b 0) (select b 1))) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  0 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  b 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  0 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  s 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:693 found new val:  (a (select s 0)) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:29 add cons:  (distinct (+ a (select b 0)) (a (select s 0))) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  0 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  s 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:693 found new val:  (seq.len (d (select s 0))) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  0 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  s 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:29 add cons:  (let ((a!1 (> (seq.len (d (select s 0))) 6))
+      (a!2 (< (seq.len (d (select s 0))) 10)))
+  (and true a!1 a!2)) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  1 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  s 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:693 found new val:  (seq.len (d (select s 1))) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  1 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  s 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:29 add cons:  (let ((a!1 (> (seq.len (d (select s 1))) 6))
+      (a!2 (< (seq.len (d (select s 1))) 10)))
+  (and true a!1 a!2)) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  0 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  s 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  6 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  (d (select s 0)) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  1 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  s 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  6 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  (d (select s 1)) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  0 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  s 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  1 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  s 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:693 found new val:  (seq.nth (d (select s 0)) 6) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:693 found new val:  (seq.nth (d (select s 1)) 6) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:693 found new val:  (b (select s 0)) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:693 found new val:  (b (select s 1)) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:29 add cons:  (let ((a!1 (+ (seq.nth (d (select s 0)) 6) (seq.nth (d (select s 1)) 6))))
+  (= a!1 (* (b (select s 0)) (b (select s 1))))) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  0 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  s 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:430 Found GAUSSIAN for var:  (c (select s 0)) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:784 after parse:  ; 
+(set-info :status unknown)
+(declare-datatypes ((S1 0)) (((S1 (a Int) (b Int) (c Real) (d (Seq Int))))))
+(declare-fun a () Int)
+(declare-fun b () (Array Int Int))
+(declare-fun s () (Array Int S1))
+(assert
+ (let (($x29 (< a 10)))
+ (and (and true (> a 5)) $x29)))
+(assert
+ (let ((?x37 (select b 1)))
+ (let ((?x44 (select b 0)))
+ (let (($x45 (< ?x44 ?x37)))
+ (or (or false (> ?x37 (select b 2))) $x45)))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x63 (a ?x62)))
+ (let ((?x44 (select b 0)))
+ (let ((?x61 (+ a ?x44)))
+ (and (distinct ?x61 ?x63) true))))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x72 (d ?x62)))
+ (let ((?x73 (seq.len ?x72)))
+ (let (($x76 (< ?x73 10)))
+ (and (and true (> ?x73 6)) $x76))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x86 (d ?x85)))
+ (let ((?x87 (seq.len ?x86)))
+ (let (($x89 (< ?x87 10)))
+ (and (and true (> ?x87 6)) $x89))))))
+(assert
+ (let ((?x85 (select s 1)))
+(let ((?x101 (b ?x85)))
+(let ((?x62 (select s 0)))
+(let ((?x100 (b ?x62)))
+(let ((?x102 (* ?x100 ?x101)))
+(= (+ (seq.nth (d ?x62) 6) (seq.nth (d ?x85) 6)) ?x102)))))))
+(check-sat)
+ 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:824 Add or expr into solver:  (< (select b 0) (select b 1)) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:925 Now mutate variable: (b (select s 0)) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:1008 ; 
+(set-info :status unknown)
+(declare-datatypes ((S1 0)) (((S1 (a Int) (b Int) (c Real) (d (Seq Int))))))
+(declare-fun a () Int)
+(declare-fun b () (Array Int Int))
+(declare-fun s () (Array Int S1))
+(assert
+ (let (($x29 (< a 10)))
+ (and (and true (> a 5)) $x29)))
+(assert
+ (let ((?x37 (select b 1)))
+ (let ((?x44 (select b 0)))
+ (let (($x45 (< ?x44 ?x37)))
+ (or (or false (> ?x37 (select b 2))) $x45)))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x63 (a ?x62)))
+ (and (distinct (+ a (select b 0)) ?x63) true))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x72 (d ?x62)))
+ (let ((?x73 (seq.len ?x72)))
+ (let (($x76 (< ?x73 10)))
+ (and (and true (> ?x73 6)) $x76))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x86 (d ?x85)))
+ (let ((?x87 (seq.len ?x86)))
+ (let (($x89 (< ?x87 10)))
+ (and (and true (> ?x87 6)) $x89))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x101 (b ?x85)))
+ (let ((?x62 (select s 0)))
+ (let ((?x100 (b ?x62)))
+ (let ((?x102 (* ?x100 ?x101)))
+ (= (+ (seq.nth (d ?x62) 6) (seq.nth (d ?x85) 6)) ?x102)))))))
+(assert
+ (let ((?x37 (select b 1)))
+ (let ((?x44 (select b 0)))
+ (< ?x44 ?x37))))
+(assert
+ (let ((?x62 (select s 0)))
+(let ((?x100 (b ?x62)))
+(= ?x100 702745756))))
+(check-sat)
+ 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:1027 (c (select s 0)) 3 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.hpp:323 blueprint.sym_getters->size():  4 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.hpp:323 blueprint.sym_getters->size():  4 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:925 Now mutate variable: (seq.len (d (select s 0))) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:1008 ; 
+(set-info :status unknown)
+(declare-datatypes ((S1 0)) (((S1 (a Int) (b Int) (c Real) (d (Seq Int))))))
+(declare-fun a () Int)
+(declare-fun b () (Array Int Int))
+(declare-fun s () (Array Int S1))
+(assert
+ (let (($x29 (< a 10)))
+ (and (and true (> a 5)) $x29)))
+(assert
+ (let ((?x37 (select b 1)))
+ (let ((?x44 (select b 0)))
+ (let (($x45 (< ?x44 ?x37)))
+ (or (or false (> ?x37 (select b 2))) $x45)))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x63 (a ?x62)))
+ (and (distinct (+ a (select b 0)) ?x63) true))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x72 (d ?x62)))
+ (let ((?x73 (seq.len ?x72)))
+ (let (($x76 (< ?x73 10)))
+ (and (and true (> ?x73 6)) $x76))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x86 (d ?x85)))
+ (let ((?x87 (seq.len ?x86)))
+ (let (($x89 (< ?x87 10)))
+ (and (and true (> ?x87 6)) $x89))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x101 (b ?x85)))
+ (let ((?x62 (select s 0)))
+ (let ((?x100 (b ?x62)))
+ (let ((?x102 (* ?x100 ?x101)))
+ (= (+ (seq.nth (d ?x62) 6) (seq.nth (d ?x85) 6)) ?x102)))))))
+(assert
+ (let ((?x37 (select b 1)))
+ (let ((?x44 (select b 0)))
+ (< ?x44 ?x37))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x100 (b ?x62)))
+ (= ?x100 702745756))))
+(assert
+ (let ((?x62 (select s 0)))
+(let ((?x72 (d ?x62)))
+(let ((?x73 (seq.len ?x72)))
+(= ?x73 7)))))
+(check-sat)
+ 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:1027 (c (select s 0)) 3 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.hpp:323 blueprint.sym_getters->size():  4 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.hpp:323 blueprint.sym_getters->size():  4 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:925 Now mutate variable: (select b 0) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:1008 ; 
+(set-info :status unknown)
+(declare-datatypes ((S1 0)) (((S1 (a Int) (b Int) (c Real) (d (Seq Int))))))
+(declare-fun a () Int)
+(declare-fun b () (Array Int Int))
+(declare-fun s () (Array Int S1))
+(assert
+ (let (($x29 (< a 10)))
+ (and (and true (> a 5)) $x29)))
+(assert
+ (let ((?x37 (select b 1)))
+ (let ((?x44 (select b 0)))
+ (let (($x45 (< ?x44 ?x37)))
+ (or (or false (> ?x37 (select b 2))) $x45)))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x63 (a ?x62)))
+ (and (distinct (+ a (select b 0)) ?x63) true))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x72 (d ?x62)))
+ (let ((?x73 (seq.len ?x72)))
+ (let (($x76 (< ?x73 10)))
+ (and (and true (> ?x73 6)) $x76))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x86 (d ?x85)))
+ (let ((?x87 (seq.len ?x86)))
+ (let (($x89 (< ?x87 10)))
+ (and (and true (> ?x87 6)) $x89))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x101 (b ?x85)))
+ (let ((?x62 (select s 0)))
+ (let ((?x100 (b ?x62)))
+ (let ((?x102 (* ?x100 ?x101)))
+ (= (+ (seq.nth (d ?x62) 6) (seq.nth (d ?x85) 6)) ?x102)))))))
+(assert
+ (let ((?x37 (select b 1)))
+ (let ((?x44 (select b 0)))
+ (< ?x44 ?x37))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x100 (b ?x62)))
+ (= ?x100 702745756))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x72 (d ?x62)))
+ (let ((?x73 (seq.len ?x72)))
+ (= ?x73 7)))))
+(assert
+ (let ((?x44 (select b 0)))
+(= ?x44 830756898)))
+(check-sat)
+ 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:1027 (c (select s 0)) 3 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.hpp:323 blueprint.sym_getters->size():  4 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.hpp:323 blueprint.sym_getters->size():  4 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:925 Now mutate variable: (seq.len (d (select s 1))) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:1008 ; 
+(set-info :status unknown)
+(declare-datatypes ((S1 0)) (((S1 (a Int) (b Int) (c Real) (d (Seq Int))))))
+(declare-fun a () Int)
+(declare-fun b () (Array Int Int))
+(declare-fun s () (Array Int S1))
+(assert
+ (let (($x29 (< a 10)))
+ (and (and true (> a 5)) $x29)))
+(assert
+ (let ((?x37 (select b 1)))
+ (let ((?x44 (select b 0)))
+ (let (($x45 (< ?x44 ?x37)))
+ (or (or false (> ?x37 (select b 2))) $x45)))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x63 (a ?x62)))
+ (and (distinct (+ a (select b 0)) ?x63) true))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x72 (d ?x62)))
+ (let ((?x73 (seq.len ?x72)))
+ (let (($x76 (< ?x73 10)))
+ (and (and true (> ?x73 6)) $x76))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x86 (d ?x85)))
+ (let ((?x87 (seq.len ?x86)))
+ (let (($x89 (< ?x87 10)))
+ (and (and true (> ?x87 6)) $x89))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x101 (b ?x85)))
+ (let ((?x62 (select s 0)))
+ (let ((?x100 (b ?x62)))
+ (let ((?x102 (* ?x100 ?x101)))
+ (= (+ (seq.nth (d ?x62) 6) (seq.nth (d ?x85) 6)) ?x102)))))))
+(assert
+ (let ((?x37 (select b 1)))
+ (let ((?x44 (select b 0)))
+ (< ?x44 ?x37))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x100 (b ?x62)))
+ (= ?x100 702745756))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x72 (d ?x62)))
+ (let ((?x73 (seq.len ?x72)))
+ (= ?x73 7)))))
+(assert
+ (let ((?x44 (select b 0)))
+ (= ?x44 830756898)))
+(assert
+ (let ((?x85 (select s 1)))
+(let ((?x86 (d ?x85)))
+(let ((?x87 (seq.len ?x86)))
+(= ?x87 7)))))
+(check-sat)
+ 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:1027 (c (select s 0)) 3 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.hpp:323 blueprint.sym_getters->size():  4 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.hpp:323 blueprint.sym_getters->size():  4 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:925 Now mutate variable: (select b 1) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:1008 ; 
+(set-info :status unknown)
+(declare-datatypes ((S1 0)) (((S1 (a Int) (b Int) (c Real) (d (Seq Int))))))
+(declare-fun a () Int)
+(declare-fun b () (Array Int Int))
+(declare-fun s () (Array Int S1))
+(assert
+ (let (($x29 (< a 10)))
+ (and (and true (> a 5)) $x29)))
+(assert
+ (let ((?x37 (select b 1)))
+ (let ((?x44 (select b 0)))
+ (let (($x45 (< ?x44 ?x37)))
+ (or (or false (> ?x37 (select b 2))) $x45)))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x63 (a ?x62)))
+ (and (distinct (+ a (select b 0)) ?x63) true))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x72 (d ?x62)))
+ (let ((?x73 (seq.len ?x72)))
+ (let (($x76 (< ?x73 10)))
+ (and (and true (> ?x73 6)) $x76))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x86 (d ?x85)))
+ (let ((?x87 (seq.len ?x86)))
+ (let (($x89 (< ?x87 10)))
+ (and (and true (> ?x87 6)) $x89))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x101 (b ?x85)))
+ (let ((?x62 (select s 0)))
+ (let ((?x100 (b ?x62)))
+ (let ((?x102 (* ?x100 ?x101)))
+ (= (+ (seq.nth (d ?x62) 6) (seq.nth (d ?x85) 6)) ?x102)))))))
+(assert
+ (let ((?x37 (select b 1)))
+ (let ((?x44 (select b 0)))
+ (< ?x44 ?x37))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x100 (b ?x62)))
+ (= ?x100 702745756))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x72 (d ?x62)))
+ (let ((?x73 (seq.len ?x72)))
+ (= ?x73 7)))))
+(assert
+ (let ((?x44 (select b 0)))
+ (= ?x44 830756898)))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x86 (d ?x85)))
+ (let ((?x87 (seq.len ?x86)))
+ (= ?x87 7)))))
+(assert
+ (let ((?x37 (select b 1)))
+(= ?x37 969625897)))
+(check-sat)
+ 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:1027 (c (select s 0)) 3 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.hpp:323 blueprint.sym_getters->size():  4 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.hpp:323 blueprint.sym_getters->size():  4 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:925 Now mutate variable: a 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:66 proccess declaration int_LENGTH(void*ptr); 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:331 constraint primitive decl:  _LENGTH 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:66 proccess declaration voidGAUSSIAN(doubleVAR,doublemu,doublesigma); 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:331 constraint primitive decl:  GAUSSIAN 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:66 proccess declaration typedefstruct{inta;intb;doublec;int*d;}S1; 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:272 member getter:  (ast-vector
+  (declare-fun a (S1) Int)
+  (declare-fun b (S1) Int)
+  (declare-fun c (S1) Real)
+  (declare-fun d (S1) (Seq Int))) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:66 proccess declaration inta; 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:66 proccess declaration intb[3]; 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:66 proccess declaration structS1s[2]; 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:38 process function definition void_CONSTRAINT(){a>5&&a<10;b[1]>b[2]||b[0]<b[1];a+b[0]!=s[0].a;_LENGTH(s[0].d)>6&&_LENGTH(s[0].d)<10;_LENGTH(s[1].d)>6&&_LENGTH(s[1].d)<10;s[0].d[6]+s[1].d[6]==s[0].b*s[1].b;GAUSSIAN(s[0].c,1.0,1.0);} 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:46 var decl:  ; 
+(set-info :status unknown)
+(check-sat)
+ 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:693 found new val:  a 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:29 add cons:  (and true (> a 5) (< a 10)) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  1 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  b 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  2 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  b 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:693 found new val:  (select b 1) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:693 found new val:  (select b 2) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:641 add clause into or_expr_idmap:  2 2 (> (select b 1) (select b 2)) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  0 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  b 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  1 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  b 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:693 found new val:  (select b 0) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:641 add clause into or_expr_idmap:  2 3 (< (select b 0) (select b 1)) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:29 add cons:  (or false (> (select b 1) (select b 2)) (< (select b 0) (select b 1))) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  0 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  b 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  0 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  s 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:693 found new val:  (a (select s 0)) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:29 add cons:  (distinct (+ a (select b 0)) (a (select s 0))) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  0 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  s 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:693 found new val:  (seq.len (d (select s 0))) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  0 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  s 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:29 add cons:  (let ((a!1 (> (seq.len (d (select s 0))) 6))
+      (a!2 (< (seq.len (d (select s 0))) 10)))
+  (and true a!1 a!2)) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  1 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  s 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:693 found new val:  (seq.len (d (select s 1))) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  1 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  s 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:29 add cons:  (let ((a!1 (> (seq.len (d (select s 1))) 6))
+      (a!2 (< (seq.len (d (select s 1))) 10)))
+  (and true a!1 a!2)) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  0 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  s 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  6 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  (d (select s 0)) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  1 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  s 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  6 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  (d (select s 1)) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  0 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  s 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  1 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  s 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:693 found new val:  (seq.nth (d (select s 0)) 6) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:693 found new val:  (seq.nth (d (select s 1)) 6) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:693 found new val:  (b (select s 0)) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:693 found new val:  (b (select s 1)) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:29 add cons:  (let ((a!1 (+ (seq.nth (d (select s 0)) 6) (seq.nth (d (select s 1)) 6))))
+  (= a!1 (* (b (select s 0)) (b (select s 1))))) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:398 idx:  0 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:399 seq:  s 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:430 Found GAUSSIAN for var:  (c (select s 0)) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:784 after parse:  ; 
+(set-info :status unknown)
+(declare-datatypes ((S1 0)) (((S1 (a Int) (b Int) (c Real) (d (Seq Int))))))
+(declare-fun a () Int)
+(declare-fun b () (Array Int Int))
+(declare-fun s () (Array Int S1))
+(assert
+ (let (($x29 (< a 10)))
+ (and (and true (> a 5)) $x29)))
+(assert
+ (let ((?x37 (select b 1)))
+ (let ((?x44 (select b 0)))
+ (let (($x45 (< ?x44 ?x37)))
+ (or (or false (> ?x37 (select b 2))) $x45)))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x63 (a ?x62)))
+ (let ((?x44 (select b 0)))
+ (let ((?x61 (+ a ?x44)))
+ (and (distinct ?x61 ?x63) true))))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x72 (d ?x62)))
+ (let ((?x73 (seq.len ?x72)))
+ (let (($x76 (< ?x73 10)))
+ (and (and true (> ?x73 6)) $x76))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x86 (d ?x85)))
+ (let ((?x87 (seq.len ?x86)))
+ (let (($x89 (< ?x87 10)))
+ (and (and true (> ?x87 6)) $x89))))))
+(assert
+ (let ((?x85 (select s 1)))
+(let ((?x101 (b ?x85)))
+(let ((?x62 (select s 0)))
+(let ((?x100 (b ?x62)))
+(let ((?x102 (* ?x100 ?x101)))
+(= (+ (seq.nth (d ?x62) 6) (seq.nth (d ?x85) 6)) ?x102)))))))
+(check-sat)
+ 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:925 Now mutate variable: (select b 1) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:1008 ; 
+(set-info :status unknown)
+(declare-datatypes ((S1 0)) (((S1 (a Int) (b Int) (c Real) (d (Seq Int))))))
+(declare-fun a () Int)
+(declare-fun b () (Array Int Int))
+(declare-fun s () (Array Int S1))
+(assert
+ (let (($x29 (< a 10)))
+ (and (and true (> a 5)) $x29)))
+(assert
+ (let ((?x37 (select b 1)))
+ (let ((?x44 (select b 0)))
+ (let (($x45 (< ?x44 ?x37)))
+ (let (($x46 (or (or false (> ?x37 (select b 2))) $x45)))
+ (not $x46))))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x63 (a ?x62)))
+ (and (distinct (+ a (select b 0)) ?x63) true))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x72 (d ?x62)))
+ (let ((?x73 (seq.len ?x72)))
+ (let (($x76 (< ?x73 10)))
+ (let (($x77 (and (and true (> ?x73 6)) $x76)))
+ (not $x77)))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x86 (d ?x85)))
+ (let ((?x87 (seq.len ?x86)))
+ (let (($x89 (< ?x87 10)))
+ (let (($x90 (and (and true (> ?x87 6)) $x89)))
+ (not $x90)))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x101 (b ?x85)))
+ (let ((?x62 (select s 0)))
+ (let ((?x100 (b ?x62)))
+ (let ((?x102 (* ?x100 ?x101)))
+ (let (($x103 (= (+ (seq.nth (d ?x62) 6) (seq.nth (d ?x85) 6)) ?x102)))
+ (not $x103))))))))
+(assert
+ (let ((?x37 (select b 1)))
+(= ?x37 2055817900)))
+(check-sat)
+ 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:1027 (c (select s 0)) 3 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.hpp:323 blueprint.sym_getters->size():  4 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.hpp:323 blueprint.sym_getters->size():  4 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:925 Now mutate variable: (select b 2) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:1008 ; 
+(set-info :status unknown)
+(declare-datatypes ((S1 0)) (((S1 (a Int) (b Int) (c Real) (d (Seq Int))))))
+(declare-fun a () Int)
+(declare-fun b () (Array Int Int))
+(declare-fun s () (Array Int S1))
+(assert
+ (let (($x29 (< a 10)))
+ (and (and true (> a 5)) $x29)))
+(assert
+ (let ((?x37 (select b 1)))
+ (let ((?x44 (select b 0)))
+ (let (($x45 (< ?x44 ?x37)))
+ (let (($x46 (or (or false (> ?x37 (select b 2))) $x45)))
+ (not $x46))))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x63 (a ?x62)))
+ (and (distinct (+ a (select b 0)) ?x63) true))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x72 (d ?x62)))
+ (let ((?x73 (seq.len ?x72)))
+ (let (($x76 (< ?x73 10)))
+ (let (($x77 (and (and true (> ?x73 6)) $x76)))
+ (not $x77)))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x86 (d ?x85)))
+ (let ((?x87 (seq.len ?x86)))
+ (let (($x89 (< ?x87 10)))
+ (let (($x90 (and (and true (> ?x87 6)) $x89)))
+ (not $x90)))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x101 (b ?x85)))
+ (let ((?x62 (select s 0)))
+ (let ((?x100 (b ?x62)))
+ (let ((?x102 (* ?x100 ?x101)))
+ (let (($x103 (= (+ (seq.nth (d ?x62) 6) (seq.nth (d ?x85) 6)) ?x102)))
+ (not $x103))))))))
+(assert
+ (let ((?x37 (select b 1)))
+ (= ?x37 2055817900)))
+(assert
+ (let ((?x40 (select b 2)))
+(= ?x40 (- 1295948508))))
+(check-sat)
+ 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:1008 ; 
+(set-info :status unknown)
+(declare-datatypes ((S1 0)) (((S1 (a Int) (b Int) (c Real) (d (Seq Int))))))
+(declare-fun a () Int)
+(declare-fun b () (Array Int Int))
+(declare-fun s () (Array Int S1))
+(assert
+ (let (($x29 (< a 10)))
+ (and (and true (> a 5)) $x29)))
+(assert
+ (let ((?x37 (select b 1)))
+ (let ((?x44 (select b 0)))
+ (let (($x45 (< ?x44 ?x37)))
+ (let (($x46 (or (or false (> ?x37 (select b 2))) $x45)))
+ (not $x46))))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x63 (a ?x62)))
+ (and (distinct (+ a (select b 0)) ?x63) true))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x72 (d ?x62)))
+ (let ((?x73 (seq.len ?x72)))
+ (let (($x76 (< ?x73 10)))
+ (let (($x77 (and (and true (> ?x73 6)) $x76)))
+ (not $x77)))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x86 (d ?x85)))
+ (let ((?x87 (seq.len ?x86)))
+ (let (($x89 (< ?x87 10)))
+ (let (($x90 (and (and true (> ?x87 6)) $x89)))
+ (not $x90)))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x101 (b ?x85)))
+ (let ((?x62 (select s 0)))
+ (let ((?x100 (b ?x62)))
+ (let ((?x102 (* ?x100 ?x101)))
+ (let (($x103 (= (+ (seq.nth (d ?x62) 6) (seq.nth (d ?x85) 6)) ?x102)))
+ (not $x103))))))))
+(assert
+ (let ((?x37 (select b 1)))
+ (= ?x37 2055817900)))
+(assert
+ (let ((?x40 (select b 2)))
+(= ?x40 698616674)))
+(check-sat)
+ 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:1008 ; 
+(set-info :status unknown)
+(declare-datatypes ((S1 0)) (((S1 (a Int) (b Int) (c Real) (d (Seq Int))))))
+(declare-fun a () Int)
+(declare-fun b () (Array Int Int))
+(declare-fun s () (Array Int S1))
+(assert
+ (let (($x29 (< a 10)))
+ (and (and true (> a 5)) $x29)))
+(assert
+ (let ((?x37 (select b 1)))
+ (let ((?x44 (select b 0)))
+ (let (($x45 (< ?x44 ?x37)))
+ (let (($x46 (or (or false (> ?x37 (select b 2))) $x45)))
+ (not $x46))))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x63 (a ?x62)))
+ (and (distinct (+ a (select b 0)) ?x63) true))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x72 (d ?x62)))
+ (let ((?x73 (seq.len ?x72)))
+ (let (($x76 (< ?x73 10)))
+ (let (($x77 (and (and true (> ?x73 6)) $x76)))
+ (not $x77)))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x86 (d ?x85)))
+ (let ((?x87 (seq.len ?x86)))
+ (let (($x89 (< ?x87 10)))
+ (let (($x90 (and (and true (> ?x87 6)) $x89)))
+ (not $x90)))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x101 (b ?x85)))
+ (let ((?x62 (select s 0)))
+ (let ((?x100 (b ?x62)))
+ (let ((?x102 (* ?x100 ?x101)))
+ (let (($x103 (= (+ (seq.nth (d ?x62) 6) (seq.nth (d ?x85) 6)) ?x102)))
+ (not $x103))))))))
+(assert
+ (let ((?x37 (select b 1)))
+ (= ?x37 2055817900)))
+(assert
+ (let ((?x40 (select b 2)))
+(= ?x40 (- 778210151))))
+(check-sat)
+ 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:1008 ; 
+(set-info :status unknown)
+(declare-datatypes ((S1 0)) (((S1 (a Int) (b Int) (c Real) (d (Seq Int))))))
+(declare-fun a () Int)
+(declare-fun b () (Array Int Int))
+(declare-fun s () (Array Int S1))
+(assert
+ (let (($x29 (< a 10)))
+ (and (and true (> a 5)) $x29)))
+(assert
+ (let ((?x37 (select b 1)))
+ (let ((?x44 (select b 0)))
+ (let (($x45 (< ?x44 ?x37)))
+ (let (($x46 (or (or false (> ?x37 (select b 2))) $x45)))
+ (not $x46))))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x63 (a ?x62)))
+ (and (distinct (+ a (select b 0)) ?x63) true))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x72 (d ?x62)))
+ (let ((?x73 (seq.len ?x72)))
+ (let (($x76 (< ?x73 10)))
+ (let (($x77 (and (and true (> ?x73 6)) $x76)))
+ (not $x77)))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x86 (d ?x85)))
+ (let ((?x87 (seq.len ?x86)))
+ (let (($x89 (< ?x87 10)))
+ (let (($x90 (and (and true (> ?x87 6)) $x89)))
+ (not $x90)))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x101 (b ?x85)))
+ (let ((?x62 (select s 0)))
+ (let ((?x100 (b ?x62)))
+ (let ((?x102 (* ?x100 ?x101)))
+ (let (($x103 (= (+ (seq.nth (d ?x62) 6) (seq.nth (d ?x85) 6)) ?x102)))
+ (not $x103))))))))
+(assert
+ (let ((?x37 (select b 1)))
+(= ?x37 (- 1962455449))))
+(check-sat)
+ 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:1027 (c (select s 0)) 3 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.hpp:323 blueprint.sym_getters->size():  4 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.hpp:323 blueprint.sym_getters->size():  4 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:925 Now mutate variable: (select b 2) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:1008 ; 
+(set-info :status unknown)
+(declare-datatypes ((S1 0)) (((S1 (a Int) (b Int) (c Real) (d (Seq Int))))))
+(declare-fun a () Int)
+(declare-fun b () (Array Int Int))
+(declare-fun s () (Array Int S1))
+(assert
+ (let (($x29 (< a 10)))
+ (and (and true (> a 5)) $x29)))
+(assert
+ (let ((?x37 (select b 1)))
+ (let ((?x44 (select b 0)))
+ (let (($x45 (< ?x44 ?x37)))
+ (let (($x46 (or (or false (> ?x37 (select b 2))) $x45)))
+ (not $x46))))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x63 (a ?x62)))
+ (and (distinct (+ a (select b 0)) ?x63) true))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x72 (d ?x62)))
+ (let ((?x73 (seq.len ?x72)))
+ (let (($x76 (< ?x73 10)))
+ (let (($x77 (and (and true (> ?x73 6)) $x76)))
+ (not $x77)))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x86 (d ?x85)))
+ (let ((?x87 (seq.len ?x86)))
+ (let (($x89 (< ?x87 10)))
+ (let (($x90 (and (and true (> ?x87 6)) $x89)))
+ (not $x90)))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x101 (b ?x85)))
+ (let ((?x62 (select s 0)))
+ (let ((?x100 (b ?x62)))
+ (let ((?x102 (* ?x100 ?x101)))
+ (let (($x103 (= (+ (seq.nth (d ?x62) 6) (seq.nth (d ?x85) 6)) ?x102)))
+ (not $x103))))))))
+(assert
+ (let ((?x37 (select b 1)))
+ (= ?x37 (- 1962455449))))
+(assert
+ (let ((?x40 (select b 2)))
+(= ?x40 (- 1571978653))))
+(check-sat)
+ 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:1027 (c (select s 0)) 3 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.hpp:323 blueprint.sym_getters->size():  4 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.hpp:323 blueprint.sym_getters->size():  4 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:925 Now mutate variable: (seq.nth (d (select s 1)) 6) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:1008 ; 
+(set-info :status unknown)
+(declare-datatypes ((S1 0)) (((S1 (a Int) (b Int) (c Real) (d (Seq Int))))))
+(declare-fun a () Int)
+(declare-fun b () (Array Int Int))
+(declare-fun s () (Array Int S1))
+(assert
+ (let (($x29 (< a 10)))
+ (and (and true (> a 5)) $x29)))
+(assert
+ (let ((?x37 (select b 1)))
+ (let ((?x44 (select b 0)))
+ (let (($x45 (< ?x44 ?x37)))
+ (let (($x46 (or (or false (> ?x37 (select b 2))) $x45)))
+ (not $x46))))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x63 (a ?x62)))
+ (and (distinct (+ a (select b 0)) ?x63) true))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x72 (d ?x62)))
+ (let ((?x73 (seq.len ?x72)))
+ (let (($x76 (< ?x73 10)))
+ (let (($x77 (and (and true (> ?x73 6)) $x76)))
+ (not $x77)))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x86 (d ?x85)))
+ (let ((?x87 (seq.len ?x86)))
+ (let (($x89 (< ?x87 10)))
+ (let (($x90 (and (and true (> ?x87 6)) $x89)))
+ (not $x90)))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x101 (b ?x85)))
+ (let ((?x62 (select s 0)))
+ (let ((?x100 (b ?x62)))
+ (let ((?x102 (* ?x100 ?x101)))
+ (let (($x103 (= (+ (seq.nth (d ?x62) 6) (seq.nth (d ?x85) 6)) ?x102)))
+ (not $x103))))))))
+(assert
+ (let ((?x37 (select b 1)))
+ (= ?x37 (- 1962455449))))
+(assert
+ (let ((?x40 (select b 2)))
+ (= ?x40 (- 1571978653))))
+(assert
+ (let ((?x85 (select s 1)))
+(let ((?x86 (d ?x85)))
+(let ((?x98 (seq.nth ?x86 6)))
+(= ?x98 1286154433)))))
+(check-sat)
+ 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:1027 (c (select s 0)) 3 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.hpp:323 blueprint.sym_getters->size():  4 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.hpp:323 blueprint.sym_getters->size():  4 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:925 Now mutate variable: (select b 0) 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:1008 ; 
+(set-info :status unknown)
+(declare-datatypes ((S1 0)) (((S1 (a Int) (b Int) (c Real) (d (Seq Int))))))
+(declare-fun a () Int)
+(declare-fun b () (Array Int Int))
+(declare-fun s () (Array Int S1))
+(assert
+ (let (($x29 (< a 10)))
+ (and (and true (> a 5)) $x29)))
+(assert
+ (let ((?x37 (select b 1)))
+ (let ((?x44 (select b 0)))
+ (let (($x45 (< ?x44 ?x37)))
+ (let (($x46 (or (or false (> ?x37 (select b 2))) $x45)))
+ (not $x46))))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x63 (a ?x62)))
+ (and (distinct (+ a (select b 0)) ?x63) true))))
+(assert
+ (let ((?x62 (select s 0)))
+ (let ((?x72 (d ?x62)))
+ (let ((?x73 (seq.len ?x72)))
+ (let (($x76 (< ?x73 10)))
+ (let (($x77 (and (and true (> ?x73 6)) $x76)))
+ (not $x77)))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x86 (d ?x85)))
+ (let ((?x87 (seq.len ?x86)))
+ (let (($x89 (< ?x87 10)))
+ (let (($x90 (and (and true (> ?x87 6)) $x89)))
+ (not $x90)))))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x101 (b ?x85)))
+ (let ((?x62 (select s 0)))
+ (let ((?x100 (b ?x62)))
+ (let ((?x102 (* ?x100 ?x101)))
+ (let (($x103 (= (+ (seq.nth (d ?x62) 6) (seq.nth (d ?x85) 6)) ?x102)))
+ (not $x103))))))))
+(assert
+ (let ((?x37 (select b 1)))
+ (= ?x37 (- 1962455449))))
+(assert
+ (let ((?x40 (select b 2)))
+ (= ?x40 (- 1571978653))))
+(assert
+ (let ((?x85 (select s 1)))
+ (let ((?x86 (d ?x85)))
+ (let ((?x98 (seq.nth ?x86 6)))
+ (= ?x98 1286154433)))))
+(assert
+ (let ((?x44 (select b 0)))
+(= ?x44 (- 1389320482))))
+(check-sat)
+ 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:1027 (c (select s 0)) 3 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.hpp:323 blueprint.sym_getters->size():  4 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.hpp:323 blueprint.sym_getters->size():  4 
+
+/Users/xjle/Projects/saturday-testgen/src/parser.cpp:925 Now mutate variable: (b (select s 1)) 
+
+[1;32mThread 1 positive generator(seed: 1785903452) output: [0m
+
+In mutate cycle 1, generated 5 cases.
+finish validating generated cases with QJS.
+[34mParse cpp time:			0.0033035s
+Generate cases time:		0.013541459s
+Validate and write cases time:	0.000925166s
+[0m
+[1;32mThread 1 negative generator(seed: 539106323) output: [0m
+
+In mutate cycle 1, generated 5 cases.
+finish validating generated cases with QJS.
+[34mParse cpp time:			0.002015917s
+Generate cases time:		0.003766042s
+Validate and write cases time:	0.000611375s
+[0m
+ALL DONE
