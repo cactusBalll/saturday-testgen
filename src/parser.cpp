@@ -767,7 +767,7 @@ namespace ststgen {
     }
 
     void CConstraintVisitor::random_flip_expr(z3::expr_vector &original_exprs) {
-        std::uniform_int_distribution<> random_bool(0,1);
+        std::uniform_int_distribution<> random_bool(0,5);
         auto status = z3::unknown;
         while (status != z3::sat) {
             m_smt_solver.reset();
@@ -802,6 +802,7 @@ namespace ststgen {
                 random_flip_expr(original_exprs);
                 // In negative mode, we do not need to proceed or expr.
                 or_expr_idmap.clear();
+                constraint_val_expr_idmap.clear();
             }
 
             if (or_expr_idmap.empty()) {
@@ -857,10 +858,7 @@ namespace ststgen {
         bool first = true;
         for (const auto &con: m_cons_expressions) {
             if (!first) {
-                if (positive == 'P')
-                    constraint_set += " && ";
-                else if(positive == 'N')
-                    constraint_set += " || ";
+                constraint_set += " && ";
             } else {
                 first = false;
             }
@@ -934,6 +932,10 @@ namespace ststgen {
 
         // 更新变量可取范围
         int64_t val_min = INT_MIN, val_max = INT_MAX;
+        if (val_name.find("seq.len") != std::string::npos) {
+            val_min = 1;
+            val_max = 100;
+        }
         for (auto expr_id: constraint_val_expr_idmap[val_name]) {
             auto or_map_find_it = or_expr_idmap.find(expr_id);
             if (or_map_find_it != or_expr_idmap.end() && (or_map_find_it->second & 1) == 0) {
