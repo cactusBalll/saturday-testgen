@@ -185,6 +185,7 @@ namespace ststgen {
         std::vector<z3::expr> constraint_val_list{};
         std::vector<z3::expr> all_expr_vector{};
         std::map<unsigned, int> or_expr_idmap;
+        int or_class_id = 0;// 标识在一个或表达式中的所有子句
         std::map<std::string, std::vector<unsigned>> constraint_val_expr_idmap;
         std::map<std::string, int> constraint_val_cur_value;
 

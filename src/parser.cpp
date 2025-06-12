@@ -632,7 +632,6 @@ namespace ststgen {
             return visit(ctx->logicalAndExpression(0));
         }
         z3::expr expr = m_solver_context.bool_val(false);
-        static int or_class_id = 0;// 标识在一个或表达式中的所有子句
         for (auto p_clause: ctx->logicalAndExpression()) {
             auto clause = std::any_cast<z3::expr>(visit(p_clause));
             if (clause.is_bool()) {
@@ -651,7 +650,7 @@ namespace ststgen {
         if (ctx->expression() != nullptr && ctx->conditionalExpression() != nullptr) {
             z3::expr true_branch = z3::implies(cond, std::any_cast<z3::expr>(visit(ctx->expression())));
             z3::expr false_branch = z3::implies(!cond, std::any_cast<z3::expr>(visit(ctx->conditionalExpression())));
-            z3::expr conj = true_branch || false_branch;
+            z3::expr conj = true_branch && false_branch;
             return conj;
         } else {
             return cond;
@@ -928,7 +927,7 @@ namespace ststgen {
         auto val_name = (*var_i).to_string();
         info("Now mutate variable:", val_name);
         auto next_var_i = var_i;
-        next_var_i++;
+        ++next_var_i;
 
         // 更新变量可取范围
         int64_t val_min = INT_MIN, val_max = INT_MAX;
@@ -1015,7 +1014,7 @@ namespace ststgen {
                     solve();
                     mutateVar(next_var_i);
                 }
-            } catch(std::exception) {
+            } catch(std::exception&) {
                 m_smt_solver.pop();
                 break;
             }

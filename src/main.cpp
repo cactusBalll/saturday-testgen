@@ -135,7 +135,7 @@ int main(int argc, char **argv) try {
             // the last thread may not generate the same number of cases
             case_per_thread = remained_cases;
         }
-        threads.emplace_back(std::thread(core_runner, cons_src, output, case_per_thread, start_case_num, i));
+        threads.emplace_back(core_runner, cons_src, output, case_per_thread, start_case_num, i);
         start_case_num.first += case_per_thread.first;
         start_case_num.second += case_per_thread.second;
     }
