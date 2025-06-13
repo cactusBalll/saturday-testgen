@@ -111,15 +111,15 @@ void _CONSTRAINT()
 #set align(center)
 #set text(1.2em)
 
-#box(fill: aqua.lighten(80%), inset: 10pt, radius: 4pt)[约束文件.c]
+#box(fill: aqua.lighten(80%), inset: 10pt, radius: 4pt)[*输入* 约束文件.c]
 #text(2em, math.arrow.r)
-#box(fill: blue.lighten(80%), inset: 10pt, radius: 4pt)[*阶段一* 解析与AST构建]
+#box(fill: blue.lighten(80%), inset: 10pt, radius: 4pt)[*阶段一* 约束文本解析与AST构建]
 #text(2em, math.arrow.r)
-#box(fill: green.lighten(80%), inset: 10pt, radius: 4pt)[*阶段二* 建模与转换]
+#box(fill: green.lighten(80%), inset: 10pt, radius: 4pt)[*阶段二* 语义分析和约束建模]
 #text(2em, math.arrow.r)
-#box(fill: orange.lighten(80%), inset: 10pt, radius: 4pt)[*阶段三* 求解与生成]
+#box(fill: orange.lighten(80%), inset: 10pt, radius: 4pt)[*阶段三* 约束变异求解与生成]
 #text(2em, math.arrow.r)
-#box(fill: red.lighten(80%), inset: 10pt, radius: 4pt)[测试用例]
+#box(fill: red.lighten(80%), inset: 10pt, radius: 4pt)[*输出* 测试用例]
 ]
 
 
@@ -137,16 +137,17 @@ void _CONSTRAINT()
 
 
 
-== 阶段二：语义分析与模型转换
-*目标：* 将AST翻译成Z3求解器可以理解的数学公式。
-*核心任务：*
-1. *变量扁平化：* 将结构体和数组访问转换为独立变量。
-    `s[0].a`  #text(1.5em, math.arrow.r)  `s_0_a`
-2. *约束翻译：* 将C表达式转换为Z3的逻辑表达式。
-    `a > 5 && a < 10` #text(1.5em, math.arrow.r) `And(a > 5, a < 10)`
-3. *元约束分离：* 识别 `_LENGTH` 和 `GAUSSIAN`，将其存入“后处理指令列表”。
+== 阶段二：语义分析和约束建模
+*目标：* 分析AST，得到约束变量数据结构（包括*结构体*的定义，*变量类型*等）并调用Z3 API构建Z3支持的可求解的约束项，建立原始约束条件和z3约束之间的映射关系。
 
-== 阶段三：约束求解与用例生成
+*核心任务：*
+1. *变量建模：* 建模结构体和数组，结构体使用Tuple理论，静态长度数组使用Array理论，动态长度数组（指针）使用Seq理论。
+    例如`s[0].a`  #text(1.5em, math.arrow.r)  `(a (select s 0))`，其中a是投影函数，将tuple投影为字段。
+2. *约束翻译：* 将C表达式转换为Z3的逻辑表达式。例如
+    `a > 5 && a < 10` #text(1.5em, math.arrow.r) `And(a > 5, a < 10)`
+3. *约束原语分离：* 识别 `_LENGTH` 和 `GAUSSIAN`，将其存入“后处理指令列表”。并记录所需的相关信息。
+
+== 阶段三：约束变异求解与生成
 *目标：* 求解约束并生成最终用例。
 *工具：* #text(green)[*Z3 Solver*] + #text(orange)[*QuickJS*]
 *流程：*
@@ -190,7 +191,7 @@ void _CONSTRAINT()
 = 系统架构与并行化 
 
 为了实现高效、不重复的并行生成，我们设计了如下分布式架构：
-
+#todo("？")
 #figure(
   grid(
     columns: (1fr, 1fr, 1fr),
