@@ -234,10 +234,8 @@
       stack(
         spacing: 0.2em,
         align(center, subject),
-        v(0.3em),
+        v(0.4em),
         line(length: 100%, stroke: 1pt + text-color),
-        v(.15em),
-        line(length: 100%, stroke: .5pt + text-color),
       )
       // reset footnote counter
       counter(footnote).update(0)
