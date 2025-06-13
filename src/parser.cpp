@@ -755,10 +755,6 @@ namespace ststgen {
                 solve[name] = array_json;
             }
         }
-        // fmt::print("got a solve: {}\n", solve.dump(4));
-        // for (const auto &[name, miu, sigma]: m_gaussian_cons) {
-        //     fmt::println("gaussian constraint {}:(miu: {}, sigma: {})", name, miu, sigma);
-        // }
 
         m_cases.emplace(std::move(solve));
         cur_case = m_cases.size();
@@ -1008,7 +1004,6 @@ namespace ststgen {
             z3::expr cons = (*var_i) == assigned_value;
             m_smt_solver.push();
             m_smt_solver.add(cons);
-            // info(m_smt_solver.to_smt2());
             try {
                 if (m_smt_solver.check() == z3::sat) {
                     solve();
