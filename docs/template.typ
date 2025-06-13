@@ -87,6 +87,7 @@
     #set text(size: zh(5), font: ("Times New Roman", "KaiTi"))
     #h(1fr) #course_name 课程大作业：#title_cn #h(1fr) #counter(page).display(numbering)
     #line(length: 100%)
+    // #context counter(footnote).update(0)
   ]
   set columns(gutter: 12pt)
   set page(
