@@ -20,7 +20,7 @@
   font: ("Times New Roman", "SimSun"),
   config-info(
     title: [基于SMT求解和变量级变异的约束用例生成器],
-    subtitle: [],
+    subtitle: [软件分析与测试实践项目-工程题目],
     author: [
       #for author in authors [
         #author.name_cn
@@ -103,34 +103,37 @@ void _CONSTRAINT()
 
 // === 整体架构 ===
 == 整体设计
-  - 我们设计的测试用例生成工具可以被分为多个阶段。
-  - 工具中每个用例生成流水线可以无锁并行。
+- 我们设计的测试用例生成工具可以被分为多个阶段。
+- 工具中每个用例生成流水线可以无锁并行。
+#[
 
-  #v(2em)
-  #set align(center)
-  #set text(1.2em)
+#v(2em)
+#set align(center)
+#set text(1.2em)
 
-  #box(fill: aqua.lighten(80%), inset: 10pt, radius: 4pt)[约束文件.c]
-  #text(2em, math.arrow.r)
-  #box(fill: blue.lighten(80%), inset: 10pt, radius: 4pt)[*阶段一* 解析与AST构建]
-  #text(2em, math.arrow.r)
-  #box(fill: green.lighten(80%), inset: 10pt, radius: 4pt)[*阶段二* 建模与转换]
-  #text(2em, math.arrow.r)
-  #box(fill: orange.lighten(80%), inset: 10pt, radius: 4pt)[*阶段三* 求解与生成]
-  #text(2em, math.arrow.r)
-  #box(fill: red.lighten(80%), inset: 10pt, radius: 4pt)[测试用例]
+#box(fill: aqua.lighten(80%), inset: 10pt, radius: 4pt)[约束文件.c]
+#text(2em, math.arrow.r)
+#box(fill: blue.lighten(80%), inset: 10pt, radius: 4pt)[*阶段一* 解析与AST构建]
+#text(2em, math.arrow.r)
+#box(fill: green.lighten(80%), inset: 10pt, radius: 4pt)[*阶段二* 建模与转换]
+#text(2em, math.arrow.r)
+#box(fill: orange.lighten(80%), inset: 10pt, radius: 4pt)[*阶段三* 求解与生成]
+#text(2em, math.arrow.r)
+#box(fill: red.lighten(80%), inset: 10pt, radius: 4pt)[测试用例]
+]
+
 
 
 // === 技术方案详解 ===
 = 技术方案详解
 
-== 阶段一：前端解析 (ANTLR4)
-*目标：* 将人类可读的约束代码，转换为机器可读的*抽象语法树 (AST)*。
-*工具：* #text(blue)[*ANTLR4*]
-*流程：*
-1. 定义 `.g4` 文法文件，描述我们的C-like语言。
-2. ANTLR4 根据文法生成解析器。
-3. 解析器读取约束文件，输出AST和符号表（记录所有变量信息）。
+== 阶段一：前端解析 (ANTLRv4)
+- *目标：* 将人类可读的约束代码，转换为易于处理的*抽象语法树 (AST)*。（实际上ANTLRv4）
+- *工具：* #text(blue)[*ANTLRv4*]
+- *流程：*
+  1. 定义 `.g4` 文法文件，描述我们的C-like语言。
+  2. ANTLRv4 根据文法生成解析器。
+  3. 解析器读取约束文件，输出AST和符号表（记录所有变量信息）。
 
 
 
